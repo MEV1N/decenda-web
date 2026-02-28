@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+    background-color: #0e0e0e;
+    color: #eaeaea;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+/* Custom Utilities for aesthetic */
+@layer utilities {
+  .glow-hover:hover {
+    box-shadow: 0 0 15px rgba(139, 0, 0, 0.4);
+    border-color: rgba(139, 0, 0, 0.8);
+  }
+}
