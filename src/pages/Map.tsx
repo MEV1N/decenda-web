@@ -14,18 +14,18 @@ interface LocationData {
 // Approximate starting coordinates - you may need to adjust these percentages 
 // to perfectly align with the text on your specific map.png
 const LOCATION_COORDS: Record<string, { top: string, left: string }> = {
-    'old_garage': { top: '15%', left: '20%' },
-    'drainage_pit': { top: '80%', left: '85%' },
-    'residential_alley': { top: '35%', left: '30%' },
-    'riverside_walkway': { top: '65%', left: '25%' },
-    'detective_office': { top: '45%', left: '50%' },
-    'town': { top: '50%', left: '75%' },
-    'police_annex': { top: '60%', left: '60%' },
     'clinic': { top: '25%', left: '65%' },
+    'detective_office': { top: '45%', left: '50%' },
+    'drainage_pit': { top: '7.13%', left: '18.58%' },
+    'old_garage': { top: '37.00%', left: '8.57%' },
+    'police_annex': { top: '43.37%', left: '77.70%' },
+    'prologue': { top: '5%', left: '5%' },
+    'residential_alley': { top: '35%', left: '30%' },
+    'riverside_walkway': { top: '21.37%', left: '13.66%' },
+    'town': { top: '10.97%', left: '63.53%' },
     'tram_station': { top: '85%', left: '40%' },
-    'your_car': { top: '55%', left: '15%' },
-    'your_house': { top: '15%', left: '80%' },
-    'prologue': { top: '5%', left: '5%' } // Example if ever added to map
+    'your_car': { top: '60.70%', left: '56.27%' },
+    'your_house': { top: '53.67%', left: '41.68%' }
 };
 
 export default function Map() {
