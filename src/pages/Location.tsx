@@ -150,26 +150,12 @@ export default function Location() {
                             >✕</button>
 
                             {/* Challenge Banner / Thumbnail */}
-                            {activeChallenge.title !== 'The Fourth Body' && (
-                                <div className="w-full h-40 mb-6 overflow-hidden rounded border border-zinc-800 shrink-0 relative mt-8">
-                                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent z-10"></div>
-                                    <img src={getImageForLocation(location?.id)} alt={`${location?.name || 'Challenge'} Thumbnail`} className="w-full h-full object-cover opacity-60 mix-blend-overlay" />
-                                </div>
-                            )}
+                            <div className="w-full h-40 mb-6 overflow-hidden rounded border border-zinc-800 shrink-0 relative mt-8">
+                                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent z-10"></div>
+                                <img src={getImageForLocation(location?.id)} alt={`${location?.name || 'Challenge'} Thumbnail`} className="w-full h-full object-cover opacity-60 mix-blend-overlay" />
+                            </div>
 
-                            {activeChallenge.title === 'The Fourth Body' ? (
-                                <div className="flex gap-6 mt-8 mb-6 shrink-0">
-                                    <div className="w-1/3 h-40 overflow-hidden rounded border border-zinc-800 relative">
-                                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent z-10"></div>
-                                        <img src="/fourth.jpg" alt="Fourth Body Thumbnail" className="w-full h-full object-cover opacity-80" />
-                                    </div>
-                                    <div className="w-2/3 flex items-center">
-                                        <h2 className="text-2xl font-bold text-accent uppercase">{activeChallenge.title}</h2>
-                                    </div>
-                                </div>
-                            ) : (
-                                <h2 className="text-2xl font-bold text-accent mb-4 uppercase pr-8 shrink-0">{activeChallenge.title}</h2>
-                            )}
+                            <h2 className="text-2xl font-bold text-accent mb-4 uppercase pr-8 shrink-0">{activeChallenge.title}</h2>
 
                             <div className="overflow-y-auto pr-2 custom-scrollbar">
 
