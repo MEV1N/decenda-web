@@ -14,8 +14,21 @@ var __dirname = path.dirname(__filename);
 var app = express();
 export var prisma = new PrismaClient();
 var port = process.env.PORT || 3000;
+var allowedOrigins = [
+    'http://localhost:5173',
+    process.env.FRONTEND_URL
+].filter(Boolean);
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: function (origin, callback) {
+        // allow requests with no origin (like mobile apps or curl requests)
+        if (!origin)
+            return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1 && process.env.NODE_ENV !== 'production') {
+            var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     credentials: true,
 }));
 app.use(express.json());
@@ -33,6 +46,10 @@ app.use(express.static(distPath));
 app.get('*', function (req, res) {
     res.sendFile(path.join(distPath, 'index.html'));
 });
-app.listen(port, function () {
-    console.log("Server is running on port ".concat(port));
-});
+// Only listen if we are not running on Vercel
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(port, function () {
+        console.log("Server is running on port ".concat(port));
+    });
+}
+export default app;
