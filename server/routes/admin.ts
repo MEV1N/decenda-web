@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { authenticate, requireAdmin } from '../middleware/auth';
-import { prisma } from '../server';
+import { authenticate, requireAdmin } from '../middleware/auth.js';
+import { prisma } from '../server.js';
 
 const router = Router();
 router.use(authenticate, requireAdmin);
