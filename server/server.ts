@@ -43,7 +43,7 @@ app.use('/api/game', gameRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/admin', adminRouter);
 
-app.get('/api/health', (req: express.Request, res: express.Response) => {
+app.get('/api/health', (_req: express.Request, res: express.Response) => {
     res.json({ status: 'ok', time: new Date() });
 });
 
@@ -54,7 +54,7 @@ if (process.env.NODE_ENV !== 'production') {
     app.use(express.static(distPath));
 
     // Catch-all to allow React Router to handle routing
-    app.get('*', (req: express.Request, res: express.Response) => {
+    app.get('*', (_req: express.Request, res: express.Response) => {
         res.sendFile(path.join(distPath, 'index.html'));
     });
 

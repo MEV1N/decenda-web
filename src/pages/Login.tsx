@@ -27,7 +27,10 @@ export default function Login() {
             }
         } catch (err: any) {
             console.error("LOGIN ERROR:", err);
-            const errMsg = err.response?.data?.error || 'Authentication failed';
+            const errorData = err.response?.data?.error;
+            const errMsg = typeof errorData === 'string'
+                ? errorData
+                : (errorData?.message ? errorData.message : 'Authentication failed (500)');
             setError(errMsg);
             alert("Login Failed: " + errMsg + "\nCheck console for details.");
         }
