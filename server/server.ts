@@ -47,17 +47,17 @@ app.get('/api/health', (req: express.Request, res: express.Response) => {
     res.json({ status: 'ok', time: new Date() });
 });
 
-// Serve frontend static files
-const distPath = path.join(__dirname, '../../dist'); // from server/dist/server.js to root/dist
-app.use(express.static(distPath));
-
-// Catch-all to allow React Router to handle routing
-app.get('*', (req: express.Request, res: express.Response) => {
-    res.sendFile(path.join(distPath, 'index.html'));
-});
-
-// Only listen if we are not running on Vercel
+// Only setup static serving and listening if we are not running on Vercel
 if (process.env.NODE_ENV !== 'production') {
+    // Serve frontend static files
+    const distPath = path.join(__dirname, '../../dist'); // from server/dist/server.js to root/dist
+    app.use(express.static(distPath));
+
+    // Catch-all to allow React Router to handle routing
+    app.get('*', (req: express.Request, res: express.Response) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+    });
+
     app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
     });
