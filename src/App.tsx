@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Map from './pages/Map';
@@ -73,9 +73,9 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <BrowserRouter>
+        <HashRouter>
           <MainLayout />
-        </BrowserRouter>
+        </HashRouter>
       </ToastProvider>
     </AuthProvider>
   );

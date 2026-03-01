@@ -15,4 +15,19 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+api.interceptors.response.use(
+    (response) => {
+        // If Vercel accidentally returns HTML instead of JSON for an API route
+        if (typeof response.data === 'string' && response.data.trim().startsWith('<')) {
+            console.error("API returned HTML instead of JSON", response.config.url);
+            alert(`API Route ${response.config.url} returned HTML! This means the Vercel Serverless function crashed or was not found.`);
+        }
+        return response;
+    },
+    (error) => {
+        console.error("API Error Response:", error.response);
+        return Promise.reject(error);
+    }
+);
+
 export default api;

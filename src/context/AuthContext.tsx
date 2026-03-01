@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     localStorage.removeItem('team');
                     setToken(null);
                     setTeam(null);
-                    window.location.href = '/login';
+                    window.location.href = '/#/login';
                     return;
                 }
                 setTeam(parsedTeam);
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem('team');
         setToken(null);
         setTeam(null);
-        window.location.href = '/login';
+        window.location.href = '/#/login';
     };
 
     return (

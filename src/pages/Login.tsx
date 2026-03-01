@@ -26,7 +26,10 @@ export default function Login() {
                 navigate('/');
             }
         } catch (err: any) {
-            setError(err.response?.data?.error || 'Authentication failed');
+            console.error("LOGIN ERROR:", err);
+            const errMsg = err.response?.data?.error || 'Authentication failed';
+            setError(errMsg);
+            alert("Login Failed: " + errMsg + "\nCheck console for details.");
         }
     };
 
