@@ -11,8 +11,7 @@ import adminRouter from './routes/admin.js';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// ESM path variables (moved down to dev block to prevent Vercel Serverless crashing on transpiled CommonJs)
 
 const app = express();
 export const prisma = new PrismaClient();
@@ -49,6 +48,9 @@ app.get('/api/health', (_req: express.Request, res: express.Response) => {
 
 // Only setup static serving and listening if we are not running on Vercel
 if (process.env.NODE_ENV !== 'production') {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
     // Serve frontend static files
     const distPath = path.join(__dirname, '../../dist'); // from server/dist/server.js to root/dist
     app.use(express.static(distPath));
