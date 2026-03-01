@@ -52,7 +52,8 @@ router.post('/create', async (req, res) => {
         res.json({ token, team: { id: newTeam.id, name: newTeam.name, role: newTeam.role, invite_code: newTeam.invite_code, has_seen_prologue: newTeam.has_seen_prologue } });
     } catch (error) {
         console.error('Create team error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        res.status(500).json({ error: `Backend crash: ${errorMessage}` });
     }
 });
 
@@ -88,7 +89,8 @@ router.post('/join', async (req, res) => {
         res.json({ token, team: { id: updatedTeam.id, name: updatedTeam.name, role: updatedTeam.role, invite_code: updatedTeam.invite_code, has_seen_prologue: updatedTeam.has_seen_prologue } });
     } catch (error) {
         console.error('Join team error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        res.status(500).json({ error: `Backend crash: ${errorMessage}` });
     }
 });
 
