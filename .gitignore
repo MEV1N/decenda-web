@@ -27,3 +27,11 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Server compiled files
+server/**/*.js
+server/**/*.map
+server/**/*.d.ts
+server/*.js
+server/*.map
+server/*.d.ts
