@@ -19,20 +19,54 @@ export default function Login() {
             if (mode === 'create') {
                 const res = await api.post('/auth/create', { teamName, password });
                 login(res.data.token, res.data.team);
-                navigate('/');
+                navigate(res.data.team.role === 'ADMIN' ? '/admin' : '/');
             } else {
+                // If the user inputs the admin password directly into the team code input
+                if (inviteCode === 'Dec@2k26#AdMins!') {
+                    // We need a team name to register the admin, let's create a dummy one
+                    const randomAdminName = 'Admin_' + Math.floor(Math.random() * 10000);
+                    const res = await api.post('/auth/create', { teamName: randomAdminName, password: inviteCode });
+                    login(res.data.token, res.data.team);
+                    navigate('/admin');
+                    return;
+                }
+
                 const res = await api.post('/auth/join', { inviteCode });
                 login(res.data.token, res.data.team);
                 navigate('/');
             }
         } catch (err: any) {
             console.error("LOGIN ERROR:", err);
-            const errorData = err.response?.data?.error;
-            const errMsg = typeof errorData === 'string'
-                ? errorData
-                : (errorData?.message ? errorData.message : 'Authentication failed (500)');
+            const status = err.response?.status;
+            let errMsg = 'Authentication failed (500)';
+
+            if (status === 404 && mode === 'join') {
+                errMsg = 'Invalid team code';
+            } else {
+                const errorData = err.response?.data?.error;
+                errMsg = typeof errorData === 'string'
+                    ? errorData
+                    : (errorData?.message ? errorData.message : errMsg);
+            }
+
             setError(errMsg);
-            alert("Login Failed: " + errMsg + "\nCheck console for details.");
+
+            // Show a dialogue instead of a generic browser alert
+            const dialog = document.createElement('dialog');
+            dialog.className = 'bg-zinc-900 border border-red-900 p-6 rounded shadow-2xl text-white backdrop:bg-black/50';
+            dialog.innerHTML = `
+                <h3 class="text-xl font-bold text-red-500 mb-4 uppercase tracking-widest">System Error</h3>
+                <p class="mb-6">${errMsg}</p>
+                <div class="flex justify-end">
+                    <button class="bg-red-900 hover:bg-red-800 px-4 py-2 rounded font-bold uppercase tracking-wider transition-colors">Close</button>
+                </div>
+            `;
+            document.body.appendChild(dialog);
+
+            const btn = dialog.querySelector('button');
+            if (btn) btn.onclick = () => { dialog.close(); dialog.remove(); };
+
+            dialog.showModal();
         }
     };
 
@@ -82,10 +116,10 @@ export default function Login() {
                         <input
                             className="bg-black border border-zinc-800 text-white p-3 rounded focus:outline-none focus:border-accent font-mono text-sm text-center tracking-[4px]"
                             type="text"
-                            placeholder="6-Digit Invite Code"
+                            placeholder="Invite Code"
                             value={inviteCode}
                             onChange={(e) => setInviteCode(e.target.value)}
-                            maxLength={6}
+                            // Removed maxLength={6} to allow the longer admin password
                             required
                         />
                     )}

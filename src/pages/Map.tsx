@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../api';
@@ -9,6 +9,18 @@ interface LocationData {
     name: string;
     is_starting: boolean;
     unlocked: boolean;
+}
+
+interface LiveChallenge {
+    id: string;
+    title: string;
+    description: string;
+    file_url: string;
+    is_bonus: boolean;
+    points: number;
+    is_locked: boolean;
+    locked_instruction?: string | null;
+    created_at: string;
 }
 
 // Approximate starting coordinates - you may need to adjust these percentages 
@@ -35,6 +47,10 @@ export default function Map() {
     const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
     const [coords, setCoords] = useState(LOCATION_COORDS);
 
+    const [liveChallenges, setLiveChallenges] = useState<LiveChallenge[]>([]);
+    const [showLiveChallenges, setShowLiveChallenges] = useState(false);
+    const prevChallengeIds = useRef<Set<string>>(new Set());
+
     const navigate = useNavigate();
     const { addToast } = useToast();
 
@@ -60,6 +76,41 @@ export default function Map() {
         }
         fetchMap();
     }, []);
+
+    useEffect(() => {
+        let mounted = true;
+
+        async function fetchLiveChallenges() {
+            try {
+                const res = await api.get('/game/live-challenges');
+                if (!mounted) return;
+
+                const challenges: LiveChallenge[] = res.data;
+                setLiveChallenges(challenges);
+
+                // Check for new challenges
+                if (prevChallengeIds.current.size > 0) {
+                    const newChallenges = challenges.filter(c => !prevChallengeIds.current.has(c.id));
+                    if (newChallenges.length > 0) {
+                        addToast('NEW CASE FILE RECEIVED', 'warning');
+                    }
+                }
+
+                // Update refs
+                prevChallengeIds.current = new Set(challenges.map(c => c.id));
+            } catch (err) {
+                console.error('Failed to load live challenges', err);
+            }
+        }
+
+        fetchLiveChallenges();
+        const interval = setInterval(fetchLiveChallenges, 10000);
+
+        return () => {
+            mounted = false;
+            clearInterval(interval);
+        };
+    }, [addToast]);
 
     const handleLocationClick = (loc: LocationData, e: React.MouseEvent) => {
         if (editMode) {
@@ -117,12 +168,25 @@ export default function Map() {
                     </button>
                 </div>
 
-                <button
-                    onClick={() => navigate('/location/prologue')}
-                    className="bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-white font-bold py-2 px-6 rounded uppercase tracking-wider text-sm transition-colors flex items-center gap-2"
-                >
-                    <span>Access Prologue (CSP #112)</span>
-                </button>
+                <div className="flex gap-4">
+                    <button
+                        onClick={() => setShowLiveChallenges(true)}
+                        className="bg-yellow-900/50 border border-yellow-700 hover:bg-yellow-800/80 text-yellow-100 font-bold py-2 px-6 rounded uppercase tracking-wider text-sm transition-colors flex items-center gap-2"
+                    >
+                        <span>New Case Files</span>
+                        {liveChallenges.length > 0 && (
+                            <span className="bg-yellow-500 text-black rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                {liveChallenges.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => navigate('/location/prologue')}
+                        className="bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-white font-bold py-2 px-6 rounded uppercase tracking-wider text-sm transition-colors flex items-center gap-2"
+                    >
+                        <span>Access Prologue (CSP #112)</span>
+                    </button>
+                </div>
             </div>
 
             <div className={`relative w-full border rounded-lg overflow-auto bg-black flex-1 custom-scrollbar ${editMode ? 'border-accent shadow-[0_0_15px_rgba(153,27,27,0.3)]' : 'border-zinc-800'}`}>
@@ -172,6 +236,66 @@ export default function Map() {
                     })}
                 </div>
             </div>
+
+            {/* Live Challenges Modal */}
+            {showLiveChallenges && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-zinc-950 border border-zinc-800 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-2xl relative"
+                    >
+                        <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900">
+                            <h3 className="text-2xl font-heading font-bold text-white uppercase tracking-widest">Live Case Files</h3>
+                            <button onClick={() => setShowLiveChallenges(false)} className="text-dimmed hover:text-white text-2xl">&times;</button>
+                        </div>
+                        <div className="p-6 overflow-auto custom-scrollbar flex-1 space-y-4">
+                            {liveChallenges.length === 0 ? (
+                                <p className="text-dimmed text-center py-8">No live case files available at this time.</p>
+                            ) : (
+                                liveChallenges.map(challenge => (
+                                    <div key={challenge.id} className={`p-5 rounded border ${challenge.is_locked ? 'bg-zinc-950/50 border-zinc-800 opacity-50 grayscale' : (challenge.is_bonus ? 'bg-yellow-950/20 border-yellow-900/50' : 'bg-black border-zinc-800')} relative`}>
+                                        {challenge.is_locked && (
+                                            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                                <span className="text-3xl font-black text-red-900/40 uppercase tracking-widest rotate-6">CORRUPTED FILE</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <h4 className={`text-xl font-bold uppercase tracking-wider ${challenge.is_locked ? 'text-zinc-600 line-through' : (challenge.is_bonus ? 'text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]' : 'text-accent')}`}>
+                                                    {challenge.title}
+                                                </h4>
+                                                <span className={`text-sm font-mono font-bold ${challenge.is_locked ? 'text-zinc-700' : 'text-accent/80'}`}>{challenge.points} PTS</span>
+                                            </div>
+                                            {challenge.is_bonus && !challenge.is_locked && <span className="text-xs font-bold bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded border border-yellow-500/50 uppercase tracking-widest">Jackpot</span>}
+                                        </div>
+                                        {challenge.is_locked ? (
+                                            <div className="mb-4 bg-red-950/20 border border-red-900 rounded p-4 relative z-20">
+                                                <h5 className="text-red-500 font-bold uppercase mb-2 text-xs tracking-wider">SYSTEM DECRYPTION ERROR</h5>
+                                                <p className="text-red-400 text-sm font-mono whitespace-pre-wrap">{challenge.locked_instruction || "ACCESS DENIED. AWAIT FURTHER INSTRUCTIONS."}</p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm mb-4 whitespace-pre-wrap text-dimmed">{challenge.description}</p>
+                                        )}
+                                        <div className="flex justify-between items-end mt-4 pt-4 border-t border-zinc-900">
+                                            <span className="text-xs text-zinc-600">Issued: {new Date(challenge.created_at).toLocaleString()}</span>
+                                            <a
+                                                href={challenge.is_locked ? '#' : api.defaults.baseURL?.replace('/api', '') + challenge.file_url}
+                                                target={challenge.is_locked ? '_self' : '_blank'}
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => challenge.is_locked && e.preventDefault()}
+                                                className={`px-4 py-2 rounded text-xs uppercase font-bold tracking-wider transition-colors inline-flex items-center gap-2 ${challenge.is_locked ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed pointer-events-none' : (challenge.is_bonus ? 'bg-yellow-600 hover:bg-yellow-500 text-black' : 'bg-zinc-800 hover:bg-zinc-700 text-white')}`}
+                                            >
+                                                {challenge.is_locked ? 'File Unavailable' : 'Download File'}
+                                            </a>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }

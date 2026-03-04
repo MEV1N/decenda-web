@@ -42,16 +42,38 @@ router.get('/map', authenticate, async (req: AuthRequest, res) => {
 
         const uniqueEdges = Array.from(new Set(edges.map(e => JSON.stringify(e)))).map(e => JSON.parse(e));
 
+        const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
+
         res.json({
             locations: allLocations.map((loc: any) => ({
                 ...loc,
-                unlocked: loc.is_starting || unlockedIds.includes(loc.id)
+                unlocked: hasOverride || loc.is_starting || unlockedIds.includes(loc.id)
             })),
             edges: uniqueEdges
         });
 
     } catch (error) {
         console.error('Error fetching map:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// GET /api/game/live-challenges
+router.get('/live-challenges', authenticate, async (req: AuthRequest, res) => {
+    try {
+        const liveChallenges = await prisma.liveChallenge.findMany({
+            orderBy: { created_at: 'desc' }
+        });
+
+        const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
+        const formattedLive = liveChallenges.map((c: any) => ({
+            ...c,
+            is_locked: hasOverride ? false : c.is_locked
+        }));
+
+        res.json(formattedLive);
+    } catch (error) {
+        console.error('Error fetching live challenges:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -67,7 +89,9 @@ router.get('/location/:id', authenticate, async (req: AuthRequest, res) => {
             return res.status(404).json({ error: 'Location not found' });
         }
 
-        if (!location.is_starting) {
+        const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
+
+        if (!hasOverride && !location.is_starting) {
             const isUnlocked = await prisma.unlockedLocation.findUnique({
                 where: { team_id_location_id: { team_id: teamId, location_id: locationId } }
             });
@@ -81,7 +105,8 @@ router.get('/location/:id', authenticate, async (req: AuthRequest, res) => {
             include: {
                 solves: {
                     where: { team_id: teamId }
-                }
+                },
+                hints: true
             }
         });
 
@@ -91,7 +116,16 @@ router.get('/location/:id', authenticate, async (req: AuthRequest, res) => {
             description: ch.description,
             points: ch.points,
             instance_required: ch.instance_required,
-            solved: ch.solves.length > 0
+            solved: ch.solves.length > 0,
+            is_locked: hasOverride ? false : ch.is_locked,
+            locked_instruction: ch.locked_instruction,
+            file_url: ch.file_url,
+            thumbnail_url: ch.thumbnail_url,
+            hints: ch.hints.map((h: any) => ({
+                id: h.id,
+                hint_text: h.hint_text,
+                penalty_points: h.penalty_points
+            }))
         }));
 
         res.json({

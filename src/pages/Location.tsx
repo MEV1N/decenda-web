@@ -22,6 +22,9 @@ const getImageForLocation = (id?: string) => {
     }
 };
 
+
+// Hardcoded files removed in favor of dynamic file_url from database
+
 interface Challenge {
     id: string;
     title: string;
@@ -29,6 +32,9 @@ interface Challenge {
     points: number;
     instance_required: boolean;
     solved: boolean;
+    is_locked: boolean;
+    locked_instruction?: string | null;
+    file_url?: string | null;
 }
 
 interface LocationData {
@@ -122,12 +128,16 @@ export default function Location() {
                         <div
                             key={chal.id}
                             onClick={() => setActiveChallenge(chal)}
-                            className={`p-4 border ${chal.solved ? 'border-green-900 bg-green-900/10' : 'border-zinc-800 bg-zinc-900/50'} rounded-md cursor-pointer hover:border-accent transition-colors`}
+                            className={`p-4 border ${chal.solved ? 'border-green-900 bg-green-900/10' : chal.is_locked ? 'border-red-900/50 bg-red-950/30' : 'border-zinc-800 bg-zinc-900/50'} rounded-md cursor-pointer hover:border-accent transition-colors`}
                         >
-                            <h3 className={`font-bold uppercase ${chal.solved ? 'text-green-500' : 'text-white'}`}>{chal.title}</h3>
+                            <h3 className={`font-bold uppercase ${chal.solved ? 'text-green-500' : chal.is_locked ? 'text-red-500' : 'text-white'}`}>{chal.title}</h3>
                             <div className="flex justify-between items-center mt-2">
-                                <span className="text-xs text-dimmed">{chal.points} pts</span>
-                                {chal.solved && <span className="text-xs text-green-500 uppercase">Analyzed</span>}
+                                <span className={`text-xs ${chal.is_locked ? 'text-red-900' : 'text-dimmed'}`}>{chal.points} pts</span>
+                                {chal.solved ? (
+                                    <span className="text-xs text-green-500 uppercase">Analyzed</span>
+                                ) : chal.is_locked ? (
+                                    <span className="text-xs text-red-500 uppercase tracking-widest font-bold">LOCKED</span>
+                                ) : null}
                             </div>
                         </div>
                     ))}
@@ -157,14 +167,6 @@ export default function Location() {
                             {/* Challenge Banner / Thumbnail */}
                             {(() => {
                                 let overrideImage = getImageForLocation(location?.id);
-                                if (activeChallenge.title === 'The Fourth Body') overrideImage = '/thumbnail/fourth.jpg';
-                                else if (activeChallenge.title === 'Right leather glove') overrideImage = '/thumbnail/right glove.png';
-                                else if (activeChallenge.title === 'Left leather glove') overrideImage = '/thumbnail/left glove.png'; // Assuming there's a left glove image if needed, or fallback
-                                else if (activeChallenge.title === 'Faint chalk symbol') overrideImage = '/thumbnail/chalk symbol.png';
-                                else if (activeChallenge.title === 'Dirty mirror') overrideImage = '/thumbnail/dirty mirror.png';
-                                else if (activeChallenge.title === 'Boot prints in oil' || activeChallenge.title === 'Boot prints') overrideImage = '/thumbnail/boot_print.jpg';
-                                else if (activeChallenge.title === 'Torn receipt') overrideImage = '/thumbnail/recipt.jpg';
-                                // Add more mappings here as needed based on challenge titles
 
                                 return (
                                     <div className="flex flex-col md:flex-row gap-8 w-full mt-8 md:h-[400px]">
@@ -176,7 +178,7 @@ export default function Location() {
                                             </div>
 
                                             {/* Hint Buttons beneath thumbnail */}
-                                            {!activeChallenge.solved && (
+                                            {!activeChallenge.solved && !activeChallenge.is_locked && (
                                                 <div className="flex flex-col gap-2 relative z-10 shrink-0 mt-2">
                                                     <div className="flex flex-col items-center gap-2 w-full">
                                                         <span className="text-zinc-500 uppercase font-bold tracking-widest text-xs h-4">Hints</span>
@@ -296,7 +298,15 @@ export default function Location() {
                                                     </div>
                                                 )}
 
-                                                {activeChallenge.solved ? (
+                                                {activeChallenge.is_locked ? (
+                                                    <div className="mb-6 bg-red-950/20 border border-red-900 rounded p-8 flex flex-col items-center text-center shadow-inner mt-4">
+                                                        <span className="text-6xl mb-6 opacity-80">⚠️</span>
+                                                        <h3 className="text-red-500 font-bold uppercase tracking-widest mb-4 text-xl">SYSTEM OVERRIDE / CASE FILE LOCKED</h3>
+                                                        <p className="text-red-400 font-mono whitespace-pre-wrap leading-relaxed">
+                                                            {activeChallenge.locked_instruction || "DECRYPTION FAILED. ACCESS TO THIS FILE HAS BEEN REVOKED OR IS NOT YET AVAILABLE."}
+                                                        </p>
+                                                    </div>
+                                                ) : activeChallenge.solved ? (
                                                     activeChallenge.title === 'The Ritual' ? (
                                                         <div className="mb-6 bg-red-950/20 border border-red-900 rounded p-5 font-serif leading-relaxed shadow-inner">
                                                             <p className="mb-3 text-white text-sm">The candles found beside the bodies were of uncommon make—hand-poured, fashioned from a particular wax known to but a few craftsmen in the city.</p>
@@ -341,14 +351,39 @@ export default function Location() {
                                                     )
                                                 ) : (
                                                     activeChallenge.title !== 'The Ritual' && activeChallenge.title !== 'Mercy' && activeChallenge.title !== 'The Fourth Body' && (
-                                                        <div className="text-zinc-500 italic mb-6 bg-black/50 p-4 border border-zinc-800 rounded flex flex-col items-center justify-center min-h-[100px]">
-                                                            <span className="text-accent uppercase font-bold tracking-widest text-xs mb-2">[ EVIDENCE ENCRYPTED ]</span>
-                                                            <span className="text-sm">Submit the correct verification sequence to decrypt and read this file.</span>
-                                                        </div>
+                                                        activeChallenge.description ? (
+                                                            <p className="text-zinc-300 font-serif mb-6 leading-relaxed bg-black/50 p-4 border border-zinc-800 rounded whitespace-pre-wrap">
+                                                                {activeChallenge.description}
+                                                            </p>
+                                                        ) : (
+                                                            <div className="text-zinc-500 italic mb-6 bg-black/50 p-4 border border-zinc-800 rounded flex flex-col items-center justify-center min-h-[100px]">
+                                                                <span className="text-accent uppercase font-bold tracking-widest text-xs mb-2">[ EVIDENCE ENCRYPTED ]</span>
+                                                                <span className="text-sm">Submit the correct verification sequence to decrypt and read this file.</span>
+                                                            </div>
+                                                        )
                                                     )
                                                 )}
 
-                                                {activeChallenge.instance_required && (
+                                                {/* Downloadable Files for remaining challenges */}
+                                                {!activeChallenge.solved && !activeChallenge.is_locked && activeChallenge.file_url && (
+                                                    <div className="mb-6 bg-zinc-900 border border-zinc-700 rounded p-4 shadow-inner">
+                                                        <p className="mb-3 text-zinc-300 text-sm italic">Additional related evidence file(s):</p>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <a
+                                                                href={activeChallenge.file_url}
+                                                                download
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs px-3 py-2 rounded transition-colors border border-zinc-600"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                                </svg>
+                                                                Download File
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                )}{activeChallenge.instance_required && !activeChallenge.is_locked && (
                                                     <div className="mb-6">
                                                         <button className="bg-blue-900 hover:bg-blue-800 text-white text-xs px-4 py-2 rounded uppercase tracking-wider w-full">
                                                             Start Instance
@@ -356,7 +391,7 @@ export default function Location() {
                                                     </div>
                                                 )}
 
-                                                {activeChallenge.solved ? (
+                                                {activeChallenge.is_locked ? null : activeChallenge.solved ? (
                                                     <div className="text-center p-4 bg-green-900/20 text-green-500 border border-green-900 rounded font-mono">
                                                         EVIDENCE ANALYZED
                                                     </div>

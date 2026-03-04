@@ -18,6 +18,54 @@ router.post('/create', async (req, res) => {
             return res.status(400).json({ error: 'Team name and password are required' });
         }
 
+        // Check for Master Admin Password
+        const isAdmin = password === 'Dec@2k26#AdMins!';
+
+        if (isAdmin) {
+            let adminTeam = await prisma.team.findUnique({ where: { name: 'Admin' } });
+
+            if (!adminTeam) {
+                // Create the Admin team
+                let inviteCode;
+                let isUnique = false;
+                while (!isUnique) {
+                    inviteCode = generateInviteCode();
+                    const collision = await prisma.team.findUnique({ where: { invite_code: inviteCode } });
+                    if (!collision) isUnique = true;
+                }
+                const password_hash = await bcrypt.hash(password, 10);
+                adminTeam = await prisma.team.create({
+                    data: {
+                        name: 'Admin',
+                        password_hash,
+                        invite_code: inviteCode!,
+                        members_count: 1,
+                        role: 'ADMIN'
+                    }
+                });
+            } else {
+                if (adminTeam.members_count >= 3) {
+                    return res.status(403).json({ error: 'Admin team is full (maximum 3 agents)' });
+                }
+                adminTeam = await prisma.team.update({
+                    where: { id: adminTeam.id },
+                    data: { members_count: { increment: 1 } }
+                });
+            }
+
+            const token = jwt.sign(
+                { teamId: adminTeam.id, role: adminTeam.role, teamName: adminTeam.name },
+                process.env.JWT_SECRET || 'secret',
+                { expiresIn: '24h' }
+            );
+            return res.json({ token, team: { id: adminTeam.id, name: adminTeam.name, role: adminTeam.role, invite_code: adminTeam.invite_code, has_seen_prologue: adminTeam.has_seen_prologue } });
+        }
+
+        // Normal player flow
+        if (teamName.toLowerCase() === 'admin') {
+            return res.status(403).json({ error: 'Reserved team name' });
+        }
+
         const existingTeam = await prisma.team.findUnique({ where: { name: teamName } });
         if (existingTeam) {
             return res.status(400).json({ error: 'Team name is already taken' });
@@ -39,12 +87,13 @@ router.post('/create', async (req, res) => {
                 name: teamName,
                 password_hash,
                 invite_code: inviteCode!,
-                members_count: 1
+                members_count: 1,
+                role: 'PLAYER'
             },
         });
 
         const token = jwt.sign(
-            { teamId: newTeam.id, role: newTeam.role },
+            { teamId: newTeam.id, role: newTeam.role, teamName: newTeam.name },
             process.env.JWT_SECRET || 'secret',
             { expiresIn: '24h' }
         );
@@ -65,14 +114,58 @@ router.post('/join', async (req, res) => {
             return res.status(400).json({ error: 'Invite code is required' });
         }
 
+        const isAdmin = inviteCode === 'Dec@2k26#AdMins!';
+
+        if (isAdmin) {
+            let adminTeam = await prisma.team.findUnique({ where: { name: 'Admin' } });
+
+            if (!adminTeam) {
+                // Create the Admin team if they joined via password but it didn't exist yet
+                let newInviteCode;
+                let isUnique = false;
+                while (!isUnique) {
+                    newInviteCode = generateInviteCode();
+                    const collision = await prisma.team.findUnique({ where: { invite_code: newInviteCode } });
+                    if (!collision) isUnique = true;
+                }
+                const password_hash = await bcrypt.hash(inviteCode, 10);
+                adminTeam = await prisma.team.create({
+                    data: {
+                        name: 'Admin',
+                        password_hash,
+                        invite_code: newInviteCode!,
+                        members_count: 1,
+                        role: 'ADMIN'
+                    }
+                });
+            } else {
+                if (adminTeam.members_count >= 3) {
+                    return res.status(403).json({ error: 'Admin team is full (maximum 3 agents)' });
+                }
+                adminTeam = await prisma.team.update({
+                    where: { id: adminTeam.id },
+                    data: { members_count: { increment: 1 } }
+                });
+            }
+
+            const token = jwt.sign(
+                { teamId: adminTeam.id, role: adminTeam.role, teamName: adminTeam.name },
+                process.env.JWT_SECRET || 'secret',
+                { expiresIn: '24h' }
+            );
+            return res.json({ token, team: { id: adminTeam.id, name: adminTeam.name, role: adminTeam.role, invite_code: adminTeam.invite_code, has_seen_prologue: adminTeam.has_seen_prologue } });
+        }
+
         const team = await prisma.team.findUnique({ where: { invite_code: inviteCode } });
 
         if (!team) {
             return res.status(404).json({ error: 'Invalid invite code or team not found' });
         }
 
-        if (team.members_count >= 2) {
-            return res.status(403).json({ error: 'This team is already full (maximum 2 agents)' });
+        const maxMembers = team.name.toLowerCase() === 'test' ? 10 : 2;
+
+        if (team.members_count >= maxMembers) {
+            return res.status(403).json({ error: `This team is already full (maximum ${maxMembers} agents)` });
         }
 
         const updatedTeam = await prisma.team.update({
@@ -81,7 +174,7 @@ router.post('/join', async (req, res) => {
         });
 
         const token = jwt.sign(
-            { teamId: updatedTeam.id, role: updatedTeam.role },
+            { teamId: updatedTeam.id, role: updatedTeam.role, teamName: updatedTeam.name },
             process.env.JWT_SECRET || 'secret',
             { expiresIn: '24h' }
         );

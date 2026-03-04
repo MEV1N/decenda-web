@@ -5,6 +5,7 @@ import Map from './pages/Map';
 import Location from './pages/Location';
 import Leaderboard from './pages/Leaderboard';
 import Prologue from './pages/Prologue';
+import Admin from './pages/Admin';
 
 function ProtectedRoute({ children, allowPrologue = false }: { children: React.ReactNode, allowPrologue?: boolean }) {
   const { isAuthenticated, team } = useAuth();
@@ -40,7 +41,12 @@ function MainLayout() {
                 </span>
               </div>
             )}
-            <Link to="/leaderboard" className="text-xs text-dimmed hover:text-white uppercase transition-colors">
+            {team?.role === 'ADMIN' && (
+              <Link to="/admin" className="text-xs text-red-500 font-bold hover:text-white uppercase transition-colors ml-4 border-l border-zinc-800 pl-4">
+                Admin
+              </Link>
+            )}
+            <Link to="/leaderboard" className="text-xs text-dimmed hover:text-white uppercase transition-colors ml-4 border-l border-zinc-800 pl-4">
               Leaderboard
             </Link>
             <button onClick={logout} className="text-xs text-dimmed hover:text-white uppercase transition-colors ml-4 border-l border-zinc-800 pl-4">
@@ -58,6 +64,7 @@ function MainLayout() {
           <Route path="/" element={<ProtectedRoute><Map /></ProtectedRoute>} />
           <Route path="/location/:id" element={<ProtectedRoute><Location /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
         </Routes>
       </main>
 

@@ -45,8 +45,12 @@ model Challenge {
   title             String
   description       String
   flag_hash         String
-  points            Int      @default(0)
-  instance_required Boolean  @default(false)
+  points             Int      @default(0)
+  instance_required  Boolean  @default(false)
+  is_locked          Boolean  @default(false)
+  locked_instruction String?
+  file_url           String?
+  thumbnail_url      String?
   unlocksPoints     Boolean  @default(true) // Should completing this give points? Prologue gives 0 points but maybe unlocks
   unlocksLocations  String[] // Array of location ids this challenge unlocks
   location          Location @relation(fields: [location_id], references: [id])
@@ -82,4 +86,17 @@ model Hint {
   hint_text      String
   penalty_points Int       @default(10)
   challenge      Challenge @relation(fields: [challenge_id], references: [id])
+}
+
+model LiveChallenge {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  file_url    String
+  thumbnail_url String?
+  is_bonus    Boolean  @default(false)
+  points             Int      @default(0)
+  is_locked          Boolean  @default(false)
+  locked_instruction String?
+  created_at         DateTime @default(now())
 }
