@@ -36,6 +36,7 @@ interface StoryChallenge {
     unlocksPoints: boolean;
     is_locked: boolean;
     locked_instruction?: string | null;
+    file_url?: string | null;
     thumbnail_url?: string | null;
     hints: Hint[];
 }
@@ -114,6 +115,7 @@ export default function Admin() {
         setLockedInstruction(challenge.locked_instruction || '');
         setFlagHash(challenge.flag_hash || '');
         setFile(null); // Clear file input since they might not want to re-upload
+        setThumbnail(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -130,6 +132,8 @@ export default function Admin() {
         setStoryLocked(challenge.is_locked);
         setStoryLockInst(challenge.locked_instruction || '');
         setStoryHints(challenge.hints || []);
+        setStoryFile(null);
+        setStoryThumbnail(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -159,6 +163,7 @@ export default function Admin() {
         setStoryLocked(false);
         setStoryLockInst('');
         setStoryThumbnail(null);
+        setStoryFile(null);
         setStoryHints([]);
     };
 
@@ -428,6 +433,7 @@ export default function Admin() {
                                     {editId ? 'Replace Case File (Optional)' : 'Case File'}
                                 </label>
                                 <input
+                                    key={`file-${editId || 'new'}`}
                                     type="file"
                                     onChange={e => setFile(e.target.files?.[0] || null)}
                                     className="w-full text-dimmed file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer"
@@ -438,6 +444,7 @@ export default function Admin() {
                                     Thumbnail Image (Optional)
                                 </label>
                                 <input
+                                    key={`thumb-${editId || 'new'}`}
                                     type="file"
                                     accept="image/*"
                                     onChange={e => setThumbnail(e.target.files?.[0] || null)}
@@ -553,6 +560,7 @@ export default function Admin() {
                             <div className="flex flex-col gap-1">
                                 <label className="text-xs text-dimmed uppercase tracking-wider">File Attachment (Optional)</label>
                                 <input
+                                    key={`story-file-${storyEditId || 'none'}`}
                                     type="file"
                                     accept=".pdf,.png,.jpg,.jpeg,.zip,.apk,.bmp"
                                     onChange={(e) => setStoryFile(e.target.files ? e.target.files[0] : null)}
@@ -562,6 +570,7 @@ export default function Admin() {
                             <div className="flex flex-col gap-1">
                                 <label className="text-xs text-dimmed uppercase tracking-wider">Thumbnail Image (Optional)</label>
                                 <input
+                                    key={`story-thumb-${storyEditId || 'none'}`}
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => setStoryThumbnail(e.target.files ? e.target.files[0] : null)}
@@ -660,7 +669,19 @@ export default function Admin() {
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <p className="text-xs text-dimmed line-clamp-2 leading-relaxed">{chal.description}</p>
+                                                    <p className="text-xs text-dimmed line-clamp-2 leading-relaxed mb-2">{chal.description}</p>
+                                                    {chal.file_url && (
+                                                        <div className="flex justify-end pr-1">
+                                                            <a
+                                                                href={api.defaults.baseURL?.replace('/api', '') + chal.file_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-[10px] text-accent hover:underline uppercase tracking-tighter"
+                                                            >
+                                                                View Forensic File
+                                                            </a>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))
                                         )}
