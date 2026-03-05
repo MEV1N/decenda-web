@@ -101,18 +101,8 @@ export default function Location() {
         setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: true, url: null, error: null, expiresAt: null } }));
 
         try {
-            const baseUrl = import.meta.env.VITE_INSTANCE_SERVER || 'http://10.3.4.141:5000';
-            const res = await fetch(`${baseUrl}/start?chal=${instanceName}`);
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                const errorMsg = data.error || data.message || '';
-                if (errorMsg.toLowerCase().includes('max') || errorMsg.toLowerCase().includes('limit') || res.status === 503) {
-                    throw new Error('Max instances reached, try again later');
-                }
-                throw new Error('Failed to start instance');
-            }
+            const res = await api.post(`/game/instance/${instanceName}`);
+            const data = res.data;
 
             if (data.url) {
                 const expiresAt = Date.now() + 15 * 60 * 1000;

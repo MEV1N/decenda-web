@@ -225,6 +225,29 @@ router.post('/submit-flag', authenticate, async (req: AuthRequest, res) => {
     }
 });
 
+// POST /api/game/instance/:name - Proxy to start investigation instances
+router.post('/instance/:name', authenticate, async (req: AuthRequest, res) => {
+    try {
+        const { name } = req.params;
+        const baseUrl = process.env.VITE_INSTANCE_SERVER || 'http://10.3.4.141:5000';
+
+        console.log(`[Proxy] Starting instance for: ${name} via ${baseUrl}`);
+
+        const response = await fetch(`${baseUrl}/start?chal=${name}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error(`[Proxy] Instance server error:`, data);
+            return res.status(response.status).json(data);
+        }
+
+        res.json(data);
+    } catch (error: any) {
+        console.error('[Proxy] Failed to contact instance server:', error);
+        res.status(500).json({ error: 'Failed to reach instance server. Please contact an admin.' });
+    }
+});
+
 // POST /api/game/submit-live-flag
 router.post('/submit-live-flag', authenticate, async (req: AuthRequest, res) => {
     try {
