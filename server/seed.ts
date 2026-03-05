@@ -212,11 +212,18 @@ const CHALLENGES = [
         id: 'office_folder', location_id: 'detective_office',
         title: 'DECENDA Folder', description: 'Medicine and parasomnia records.',
         flag: 'dec{office_folder}', points: 50, unlocksLocations: [], // Connected from car decenda records
+        instance_required: true,
     },
     {
         id: 'office_somnarch', location_id: 'detective_office',
         title: 'The SOMNARCH', description: 'Dead end profile from the pharmacy receipt.',
         flag: 'dec{office_somnarch}', points: 20, unlocksLocations: [],
+    },
+    {
+        id: 'office_meds_records', location_id: 'detective_office',
+        title: 'Medicine and Parasomnia Records', description: 'Detailed records from the sleep study logs.',
+        flag: 'dec{m3dicin3_4nd_p4r450mnia}', points: 30, unlocksLocations: [],
+        instance_required: true,
     },
     {
         id: 'office_note', location_id: 'detective_office',
@@ -244,6 +251,7 @@ const CHALLENGES = [
         id: 'town_boot', location_id: 'town',
         title: 'Boot shop', description: 'Sells the same brand as the discarded shoe.',
         flag: 'dec{town_boot}', points: 20, unlocksLocations: ['your_house'], // logic: -> Other Shoe (Major Role)
+        instance_required: true,
     },
     {
         id: 'town_bills', location_id: 'town',

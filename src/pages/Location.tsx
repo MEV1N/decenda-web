@@ -85,6 +85,8 @@ export default function Location() {
         if (lowerTitle.includes('stick no bills')) return 'bills';
         if (lowerTitle.includes('boot prints')) return 'boot';
         if (lowerTitle.includes('shepherd falls')) return 'shepherd';
+        if (lowerTitle.includes('medicine and parasomnia records')) return 'meds';
+        if (lowerTitle.includes('boot shop')) return 'bootshop';
         return null;
     };
 
@@ -274,9 +276,9 @@ export default function Location() {
 
                                                                         <div className="text-center mt-2">
                                                                             <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest block mb-1">
-                                                                                {instanceName === 'boot' ? 'Connection Command:' : 'Investigation Link:'}
+                                                                                {['boot', 'bootshop'].includes(instanceName || '') ? 'Connection Command:' : 'Investigation Link:'}
                                                                             </span>
-                                                                            {instanceName === 'boot' ? (
+                                                                            {['boot', 'bootshop'].includes(instanceName || '') ? (
                                                                                 <div className="flex flex-col gap-2">
                                                                                     <code className="bg-black/80 text-red-400 p-2 rounded border border-red-900/30 text-xs font-mono break-all select-all">
                                                                                         nc {st.url.replace(/^https?:\/\//, '').replace(/\/$/, '').replace(':', ' ')}
