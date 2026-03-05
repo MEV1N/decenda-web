@@ -73,47 +73,59 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
         const file = files?.file?.[0];
         const thumbnail = files?.thumbnail?.[0];
 
+        console.log(`[Admin] Challenge Upload Request - ID: ${id}, Title: ${title}`);
+        console.log(`[Admin] Payload: points=${points}, instance=${instance_required}, isLocked=${is_locked}`);
+
+        if (!id) {
+            console.error('[Admin] Missing challenge ID');
+            return res.status(400).json({ error: 'Missing challenge ID' });
+        }
+
         let file_url: string | undefined = undefined;
         let thumbnail_url: string | undefined = undefined;
 
-        const existingChallenge = await prisma.challenge.findUnique({ where: { id } });
+        console.log('[Admin] Checking for existing challenge...');
+        const existingChallenge = await (prisma as any).challenge.findUnique({ where: { id } });
 
         if (file) {
-            // Delete the old file if it exists and updating
+            console.log(`[Admin] Processing file: ${file.filename}`);
             if (existingChallenge && existingChallenge.file_url) {
                 const fileName = path.basename(existingChallenge.file_url);
                 const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
                 if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
+                    try { fs.unlinkSync(filePath); } catch (e) { console.warn(`[Admin] Could not delete old file: ${filePath}`); }
                 }
             }
             file_url = `/uploads/${file.filename}`;
         }
 
         if (thumbnail) {
-            // Delete the old thumbnail if it exists
+            console.log(`[Admin] Processing thumbnail: ${thumbnail.filename}`);
             if (existingChallenge && existingChallenge.thumbnail_url) {
                 const fileName = path.basename(existingChallenge.thumbnail_url);
                 const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
                 if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
+                    try { fs.unlinkSync(filePath); } catch (e) { console.warn(`[Admin] Could not delete old thumbnail: ${filePath}`); }
                 }
             }
             thumbnail_url = `/uploads/${thumbnail.filename}`;
         }
 
-        if (!id) {
-            return res.status(400).json({ error: 'Missing challenge ID' });
+        let parsedUnlocks = [];
+        try {
+            parsedUnlocks = unlocksLocations ? (typeof unlocksLocations === 'string' ? JSON.parse(unlocksLocations) : unlocksLocations) : [];
+        } catch (e) {
+            console.warn('[Admin] Failed to parse unlocksLocations safely:', unlocksLocations);
         }
 
         const updateData: Record<string, any> = {
             location_id,
             title,
             description,
-            flag_hash,
+            flag_hash: flag_hash || '',
             points: points ? parseInt(points.toString()) : 0,
             instance_required: instance_required === 'true' || instance_required === true,
-            unlocksLocations: unlocksLocations ? (typeof unlocksLocations === 'string' ? JSON.parse(unlocksLocations) : unlocksLocations) : [],
+            unlocksLocations: parsedUnlocks,
             unlocksPoints: unlocksPoints === 'true' || unlocksPoints === true,
             is_locked: is_locked === 'true' || is_locked === true,
             locked_instruction: locked_instruction || null
@@ -127,10 +139,10 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
             location_id,
             title,
             description,
-            flag_hash,
+            flag_hash: flag_hash || '',
             points: points ? parseInt(points.toString()) : 0,
             instance_required: instance_required === 'true' || instance_required === true,
-            unlocksLocations: unlocksLocations ? (typeof unlocksLocations === 'string' ? JSON.parse(unlocksLocations) : unlocksLocations) : [],
+            unlocksLocations: parsedUnlocks,
             unlocksPoints: unlocksPoints === 'true' || unlocksPoints === true,
             is_locked: is_locked === 'true' || is_locked === true,
             locked_instruction: locked_instruction || null,
@@ -138,19 +150,22 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
             thumbnail_url: thumbnail_url || null
         };
 
+        console.log('[Admin] Upserting challenge in DB...');
         const challenge = await (prisma as any).challenge.upsert({
             where: { id },
             update: updateData,
             create: createData,
             include: { hints: true }
         });
+
+        console.log('[Admin] Upsert successful for:', challenge.id);
         res.json(challenge);
     } catch (error: any) {
-        console.error('Error creating/updating challenge:', error);
+        console.error('[Admin] FATAL ERROR IN CHALLENGE UPLOAD:', error);
         res.status(500).json({
-            error: 'Internal server error during challenge upload',
+            error: 'Failed to process challenge upload',
             message: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            prismaError: error.code || undefined
         });
     }
 });
@@ -161,22 +176,26 @@ router.delete('/challenge/:id', async (req, res) => {
         const { id } = req.params;
 
         // Find it first to delete the files
-        const challenge = await prisma.challenge.findUnique({ where: { id } });
+        const challenge = await (prisma as any).challenge.findUnique({ where: { id } });
 
         if (challenge) {
             if (challenge.file_url) {
                 const fileName = path.basename(challenge.file_url);
                 const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                if (fs.existsSync(filePath)) {
+                    try { fs.unlinkSync(filePath); } catch (e) { }
+                }
             }
             if (challenge.thumbnail_url) {
                 const fileName = path.basename(challenge.thumbnail_url);
                 const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                if (fs.existsSync(filePath)) {
+                    try { fs.unlinkSync(filePath); } catch (e) { }
+                }
             }
         }
 
-        await prisma.challenge.delete({
+        await (prisma as any).challenge.delete({
             where: { id }
         });
 
@@ -217,7 +236,7 @@ router.post('/hint', async (req, res) => {
 router.delete('/hint/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        await prisma.hint.delete({ where: { id } });
+        await (prisma as any).hint.delete({ where: { id } });
         res.json({ message: 'Hint deleted successfully' });
     } catch (error) {
         console.error('Error deleting hint:', error);
@@ -284,14 +303,16 @@ router.put('/live-challenge/:id', upload.fields([{ name: 'file', maxCount: 1 }, 
             locked_instruction: locked_instruction || null
         };
 
-        const existingChallenge = await prisma.liveChallenge.findUnique({ where: { id } });
+        const existingChallenge = await (prisma as any).liveChallenge.findUnique({ where: { id } });
 
         if (file) {
             // Delete the old file if it exists
             if (existingChallenge && existingChallenge.file_url) {
                 const fileName = path.basename(existingChallenge.file_url);
                 const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                if (fs.existsSync(filePath)) {
+                    try { fs.unlinkSync(filePath); } catch (e) { }
+                }
             }
             updateData.file_url = `/uploads/${file.filename}`;
         }
@@ -301,7 +322,9 @@ router.put('/live-challenge/:id', upload.fields([{ name: 'file', maxCount: 1 }, 
             if (existingChallenge && existingChallenge.thumbnail_url) {
                 const fileName = path.basename(existingChallenge.thumbnail_url);
                 const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                if (fs.existsSync(filePath)) {
+                    try { fs.unlinkSync(filePath); } catch (e) { }
+                }
             }
             updateData.thumbnail_url = `/uploads/${thumbnail.filename}`;
         }

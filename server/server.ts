@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { PrismaClient } from '@prisma/client';
 import authRouter from './routes/auth.js';
@@ -48,7 +49,22 @@ app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (_req: express.Request, res: express.Response) => {
-    res.json({ status: 'ok', time: new Date() });
+    const uploadDir = path.join(process.cwd(), 'server', 'uploads');
+    res.json({
+        status: 'ok',
+        time: new Date(),
+        uploadsDir: fs.existsSync(uploadDir)
+    });
+});
+
+// Global Error Handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('SERVER_ERROR:', err);
+    res.status(err.status || 500).json({
+        error: err.message || 'Internal Server Error',
+        code: err.code,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
 });
 
 // Only setup static serving and listening if we are not running on Vercel
