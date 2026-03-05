@@ -23,7 +23,10 @@ const storage = multer.diskStorage({
         cb(null, uniqueSuffix + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage });
+const upload = multer({
+    storage,
+    limits: { fileSize: 100 * 1024 * 1024 } // 100MB
+});
 
 // Get all data for the admin dashboard
 router.get('/all-data', async (req, res) => {
@@ -99,6 +102,10 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
             thumbnail_url = `/uploads/${thumbnail.filename}`;
         }
 
+        if (!id) {
+            return res.status(400).json({ error: 'Missing challenge ID' });
+        }
+
         const updateData: Record<string, any> = {
             location_id,
             title,
@@ -138,9 +145,13 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
             include: { hints: true }
         });
         res.json(challenge);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating/updating challenge:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({
+            error: 'Internal server error during challenge upload',
+            message: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
@@ -246,7 +257,11 @@ router.post('/live-challenge', upload.fields([{ name: 'file', maxCount: 1 }, { n
         res.status(201).json(liveChallenge);
     } catch (error: any) {
         console.error('Error creating live challenge:', error);
-        res.status(500).json({ error: error?.message || 'Internal server error', detail: String(error) });
+        res.status(500).json({
+            error: 'Internal server error during live challenge upload',
+            message: error.message,
+            detail: String(error)
+        });
     }
 });
 
