@@ -13,6 +13,7 @@ interface LiveChallenge {
     points: number;
     is_locked: boolean;
     locked_instruction?: string | null;
+    flag_hash?: string | null;
     created_at: string;
 }
 
@@ -60,6 +61,7 @@ export default function Admin() {
     const [description, setDescription] = useState('');
     const [points, setPoints] = useState<number>(0);
     const [file, setFile] = useState<File | null>(null);
+    const [flagHash, setFlagHash] = useState('');
     const [isBonus, setIsBonus] = useState(false);
     const [isLocked, setIsLocked] = useState(false);
     const [lockedInstruction, setLockedInstruction] = useState('');
@@ -110,6 +112,7 @@ export default function Admin() {
         setIsBonus(challenge.is_bonus);
         setIsLocked(challenge.is_locked);
         setLockedInstruction(challenge.locked_instruction || '');
+        setFlagHash(challenge.flag_hash || '');
         setFile(null); // Clear file input since they might not want to re-upload
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -137,6 +140,7 @@ export default function Admin() {
         setPoints(0);
         setFile(null);
         setThumbnail(null);
+        setFlagHash('');
         setIsBonus(false);
         setIsLocked(false);
         setLockedInstruction('');
@@ -171,6 +175,7 @@ export default function Admin() {
         const formData = new FormData();
         formData.append('title', title);
         formData.append('description', description);
+        formData.append('flag_hash', flagHash);
         formData.append('is_bonus', isBonus ? 'true' : 'false');
         formData.append('points', points.toString());
         formData.append('is_locked', isLocked ? 'true' : 'false');
@@ -195,9 +200,10 @@ export default function Admin() {
 
             resetForm();
             fetchChallenges();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            addToast(`Failed to ${editId ? 'update' : 'deploy'} case file`, 'error');
+            const serverMsg = err?.response?.data?.detail || err?.response?.data?.error || '';
+            addToast(`Failed to ${editId ? 'update' : 'deploy'} case file${serverMsg ? ': ' + serverMsg : ''}`, 'error');
         } finally {
             setLoading(false);
         }
@@ -375,6 +381,16 @@ export default function Admin() {
                                     value={points}
                                     onChange={e => setPoints(parseInt(e.target.value) || 0)}
                                     className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white focus:outline-none focus:border-accent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs uppercase text-dimmed mb-1">Passcode/Flag</label>
+                                <input
+                                    type="text"
+                                    value={flagHash}
+                                    onChange={e => setFlagHash(e.target.value)}
+                                    className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-zinc-500 font-mono text-sm focus:outline-none focus:border-accent"
+                                    placeholder="Enter exact flag"
                                 />
                             </div>
                         </div>

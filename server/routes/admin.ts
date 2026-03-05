@@ -209,7 +209,7 @@ router.delete('/hint/:id', async (req, res) => {
 // Upload a new live challenge (case file)
 router.post('/live-challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'thumbnail', maxCount: 1 }]), async (req: any, res) => {
     try {
-        const { title, description, is_bonus, points, is_locked, locked_instruction } = req.body;
+        const { title, description, flag_hash, is_bonus, points, is_locked, locked_instruction } = req.body;
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         const file = files?.file?.[0];
         const thumbnail = files?.thumbnail?.[0];
@@ -226,6 +226,7 @@ router.post('/live-challenge', upload.fields([{ name: 'file', maxCount: 1 }, { n
                 title,
                 description,
                 file_url,
+                flag_hash: flag_hash || null,
                 thumbnail_url,
                 is_bonus: is_bonus === 'true' || is_bonus === true,
                 points: points ? parseInt(points) : 0,
@@ -235,9 +236,9 @@ router.post('/live-challenge', upload.fields([{ name: 'file', maxCount: 1 }, { n
         });
 
         res.status(201).json(liveChallenge);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating live challenge:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error?.message || 'Internal server error', detail: String(error) });
     }
 });
 
@@ -245,7 +246,7 @@ router.post('/live-challenge', upload.fields([{ name: 'file', maxCount: 1 }, { n
 router.put('/live-challenge/:id', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'thumbnail', maxCount: 1 }]), async (req: any, res) => {
     try {
         const { id } = req.params;
-        const { title, description, is_bonus, points, is_locked, locked_instruction } = req.body;
+        const { title, description, flag_hash, is_bonus, points, is_locked, locked_instruction } = req.body;
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         const file = files?.file?.[0];
         const thumbnail = files?.thumbnail?.[0];
@@ -253,6 +254,7 @@ router.put('/live-challenge/:id', upload.fields([{ name: 'file', maxCount: 1 }, 
         const updateData: Record<string, any> = {
             title,
             description,
+            flag_hash: flag_hash || null,
             is_bonus: is_bonus === 'true' || is_bonus === true,
             points: points ? parseInt(points) : 0,
             is_locked: is_locked === 'true' || is_locked === true,
@@ -287,9 +289,9 @@ router.put('/live-challenge/:id', upload.fields([{ name: 'file', maxCount: 1 }, 
         });
 
         res.json(liveChallenge);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error updating live challenge:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error?.message || 'Internal server error', detail: String(error) });
     }
 });
 

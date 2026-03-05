@@ -61,14 +61,30 @@ router.get('/map', authenticate, async (req: AuthRequest, res) => {
 // GET /api/game/live-challenges
 router.get('/live-challenges', authenticate, async (req: AuthRequest, res) => {
     try {
-        const liveChallenges = await prisma.liveChallenge.findMany({
-            orderBy: { created_at: 'desc' }
+        const teamId = req.team?.teamId;
+
+        const liveChallenges = await (prisma as any).liveChallenge.findMany({
+            orderBy: { created_at: 'desc' },
+            include: {
+                solves: teamId ? {
+                    where: { team_id: teamId }
+                } : false
+            }
         });
 
         const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
         const formattedLive = liveChallenges.map((c: any) => ({
-            ...c,
-            is_locked: hasOverride ? false : c.is_locked
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            file_url: c.file_url,
+            thumbnail_url: c.thumbnail_url,
+            is_bonus: c.is_bonus,
+            points: c.points,
+            is_locked: hasOverride ? false : c.is_locked,
+            locked_instruction: c.locked_instruction,
+            created_at: c.created_at,
+            has_solved: c.solves?.length > 0
         }));
 
         res.json(formattedLive);
@@ -206,6 +222,62 @@ router.post('/submit-flag', authenticate, async (req: AuthRequest, res) => {
 
     } catch (error) {
         console.error('Flag submission error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// POST /api/game/submit-live-flag
+router.post('/submit-live-flag', authenticate, async (req: AuthRequest, res) => {
+    try {
+        const teamId = req.team?.teamId;
+        if (!teamId) {
+            return res.status(401).json({ error: 'Invalid session. Please log in again.' });
+        }
+        const { challengeId, flag } = req.body;
+
+        const challenge = await prisma.liveChallenge.findUnique({ where: { id: challengeId } });
+        if (!challenge) {
+            return res.status(404).json({ error: 'Challenge not found' });
+        }
+
+        if (challenge.is_locked) {
+            return res.status(403).json({ error: 'This challenge is currently locked.' });
+        }
+
+        if (!challenge.flag_hash) {
+            return res.status(400).json({ error: 'No flag set for this challenge.' });
+        }
+
+        if (flag !== challenge.flag_hash) {
+            return res.status(400).json({ error: 'Incorrect flag' });
+        }
+
+        // Check if already solved (use LiveSolve)
+        const existingSolve = await (prisma as any).liveSolve.findUnique({
+            where: { team_id_challenge_id: { team_id: teamId, challenge_id: challengeId } }
+        });
+
+        if (existingSolve) {
+            return res.status(400).json({ error: 'Challenge already solved by your team.' });
+        }
+
+        // Record the solve
+        await (prisma as any).liveSolve.create({
+            data: { team_id: teamId, challenge_id: challengeId }
+        });
+
+        // Award points to team
+        if (challenge.points > 0) {
+            await prisma.team.update({
+                where: { id: teamId },
+                data: { points: { increment: challenge.points } }
+            });
+        }
+
+        res.json({ message: 'Correct flag! Points awarded.', pointsAwarded: challenge.points });
+
+    } catch (error) {
+        console.error('Live flag submission error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

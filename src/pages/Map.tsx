@@ -22,6 +22,7 @@ interface LiveChallenge {
     is_locked: boolean;
     locked_instruction?: string | null;
     created_at: string;
+    has_solved?: boolean;
 }
 
 // Approximate starting coordinates - you may need to adjust these percentages 
@@ -48,6 +49,9 @@ export default function Map() {
 
     const [liveChallenges, setLiveChallenges] = useState<LiveChallenge[]>([]);
     const [showLiveChallenges, setShowLiveChallenges] = useState(false);
+    const [expandedChallengeId, setExpandedChallengeId] = useState<string | null>(null);
+    const [flagInputs, setFlagInputs] = useState<Record<string, string>>({});
+    const [submittingFlag, setSubmittingFlag] = useState(false);
     const prevChallengeIds = useRef<Set<string>>(new Set());
 
     const navigate = useNavigate();
@@ -111,6 +115,32 @@ export default function Map() {
             clearInterval(interval);
         };
     }, [addToast]);
+
+    const submitLiveFlag = async (challengeId: string) => {
+        const flag = flagInputs[challengeId];
+        if (!flag) {
+            addToast('Please enter a passcode.', 'warning');
+            return;
+        }
+
+        setSubmittingFlag(true);
+        try {
+            const res = await api.post('/game/submit-live-flag', { challengeId, flag });
+            addToast(res.data.message || 'Passcode accepted!', 'success');
+
+            // Mark locally as solved
+            setLiveChallenges(prev => prev.map(c => c.id === challengeId ? { ...c, has_solved: true } : c));
+            setFlagInputs(prev => ({ ...prev, [challengeId]: '' }));
+
+            // Add points locally to avoid needing to refetch team data immediately
+            // But ideally the context updates, maybe a quick refresh of user profile could be triggered
+        } catch (err: any) {
+            console.error('Submit error:', err);
+            addToast(err.response?.data?.error || 'Failed to submit passcode.', 'error');
+        } finally {
+            setSubmittingFlag(false);
+        }
+    };
 
     const handleLocationClick = (loc: LocationData) => {
         if (loc.unlocked) {
@@ -206,44 +236,98 @@ export default function Map() {
                             {liveChallenges.length === 0 ? (
                                 <p className="text-dimmed text-center py-8">No live case files available at this time.</p>
                             ) : (
-                                liveChallenges.map(challenge => (
-                                    <div key={challenge.id} className={`p-5 rounded border ${challenge.is_locked ? 'bg-zinc-950/50 border-zinc-800 opacity-50 grayscale' : (challenge.is_bonus ? 'bg-yellow-950/20 border-yellow-900/50' : 'bg-black border-zinc-800')} relative`}>
-                                        {challenge.is_locked && (
-                                            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                                                <span className="text-3xl font-black text-red-900/40 uppercase tracking-widest rotate-6">CORRUPTED FILE</span>
-                                            </div>
-                                        )}
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div>
-                                                <h4 className={`text-xl font-bold uppercase tracking-wider ${challenge.is_locked ? 'text-zinc-600 line-through' : (challenge.is_bonus ? 'text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]' : 'text-accent')}`}>
-                                                    {challenge.title}
-                                                </h4>
-                                                <span className={`text-sm font-mono font-bold ${challenge.is_locked ? 'text-zinc-700' : 'text-accent/80'}`}>{challenge.points} PTS</span>
-                                            </div>
-                                            {challenge.is_bonus && !challenge.is_locked && <span className="text-xs font-bold bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded border border-yellow-500/50 uppercase tracking-widest">Jackpot</span>}
-                                        </div>
-                                        {challenge.is_locked ? (
-                                            <div className="mb-4 bg-red-950/20 border border-red-900 rounded p-4 relative z-20">
-                                                <h5 className="text-red-500 font-bold uppercase mb-2 text-xs tracking-wider">SYSTEM DECRYPTION ERROR</h5>
-                                                <p className="text-red-400 text-sm font-mono whitespace-pre-wrap">{challenge.locked_instruction || "ACCESS DENIED. AWAIT FURTHER INSTRUCTIONS."}</p>
-                                            </div>
-                                        ) : (
-                                            <p className="text-sm mb-4 whitespace-pre-wrap text-dimmed">{challenge.description}</p>
-                                        )}
-                                        <div className="flex justify-between items-end mt-4 pt-4 border-t border-zinc-900">
-                                            <span className="text-xs text-zinc-600">Issued: {new Date(challenge.created_at).toLocaleString()}</span>
-                                            <a
-                                                href={challenge.is_locked ? '#' : api.defaults.baseURL?.replace('/api', '') + challenge.file_url}
-                                                target={challenge.is_locked ? '_self' : '_blank'}
-                                                rel="noopener noreferrer"
-                                                onClick={(e) => challenge.is_locked && e.preventDefault()}
-                                                className={`px-4 py-2 rounded text-xs uppercase font-bold tracking-wider transition-colors inline-flex items-center gap-2 ${challenge.is_locked ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed pointer-events-none' : (challenge.is_bonus ? 'bg-yellow-600 hover:bg-yellow-500 text-black' : 'bg-zinc-800 hover:bg-zinc-700 text-white')}`}
+                                liveChallenges.map(challenge => {
+                                    const isExpanded = expandedChallengeId === challenge.id;
+
+                                    return (
+                                        <div key={challenge.id} className={`rounded border transition-all duration-300 ${challenge.is_locked ? 'bg-zinc-950/50 border-zinc-800 opacity-50 grayscale' : (challenge.is_bonus ? 'bg-yellow-950/20 border-yellow-900/50' : 'bg-black border-zinc-800')} relative`}>
+                                            {challenge.is_locked && (
+                                                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none overflow-hidden">
+                                                    <span className="text-3xl font-black text-red-900/40 uppercase tracking-widest rotate-6">CORRUPTED FILE</span>
+                                                </div>
+                                            )}
+
+                                            {/* Collapsed Header (Click to expand) */}
+                                            <button
+                                                onClick={() => setExpandedChallengeId(isExpanded ? null : challenge.id)}
+                                                className="w-full text-left p-5 flex justify-between items-center focus:outline-none"
                                             >
-                                                {challenge.is_locked ? 'File Unavailable' : 'Download File'}
-                                            </a>
+                                                <div className="flex items-center gap-4">
+                                                    <h4 className={`text-xl font-bold uppercase tracking-wider ${challenge.is_locked ? 'text-zinc-600 line-through' : (challenge.is_bonus ? 'text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]' : 'text-accent')}`}>
+                                                        {challenge.title}
+                                                    </h4>
+                                                    {challenge.has_solved && (
+                                                        <span className="bg-green-500/20 text-green-400 border border-green-500/50 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-widest">Solved</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    {challenge.is_bonus && !challenge.is_locked && <span className="text-xs font-bold bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded border border-yellow-500/50 uppercase tracking-widest">Jackpot</span>}
+                                                    <span className={`text-sm font-mono font-bold ${challenge.is_locked ? 'text-zinc-700' : 'text-accent/80'}`}>{challenge.points} PTS</span>
+                                                    <span className="text-dimmed ml-2">{isExpanded ? '▲' : '▼'}</span>
+                                                </div>
+                                            </button>
+
+                                            {/* Expanded Content */}
+                                            {isExpanded && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    className="px-5 pb-5 pt-2 border-t border-zinc-900/50"
+                                                >
+                                                    {challenge.is_locked ? (
+                                                        <div className="mb-4 bg-red-950/20 border border-red-900 rounded p-4 relative z-20 mt-2">
+                                                            <h5 className="text-red-500 font-bold uppercase mb-2 text-xs tracking-wider">SYSTEM DECRYPTION ERROR</h5>
+                                                            <p className="text-red-400 text-sm font-mono whitespace-pre-wrap">{challenge.locked_instruction || "ACCESS DENIED. AWAIT FURTHER INSTRUCTIONS."}</p>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-sm mb-6 whitespace-pre-wrap text-dimmed leading-relaxed">{challenge.description}</p>
+                                                    )}
+
+                                                    {!challenge.is_locked && (
+                                                        <div className="flex flex-col md:flex-row gap-4 items-end mt-4 pt-4 border-t border-zinc-900">
+                                                            <div className="flex-1 w-full">
+                                                                {challenge.has_solved ? (
+                                                                    <div className="p-3 bg-green-950/30 border border-green-900/50 rounded flex items-center justify-center">
+                                                                        <span className="text-green-500 font-bold tracking-widest uppercase text-sm">Passcode Accepted. Points Awarded.</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex gap-2">
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder="ENTER FILE PASSCODE"
+                                                                            value={flagInputs[challenge.id] || ''}
+                                                                            onChange={(e) => setFlagInputs(prev => ({ ...prev, [challenge.id]: e.target.value }))}
+                                                                            className="flex-1 bg-black border border-zinc-800 rounded px-4 py-2 text-accent font-mono text-sm focus:outline-none focus:border-accent"
+                                                                            onKeyDown={(e) => e.key === 'Enter' && submitLiveFlag(challenge.id)}
+                                                                        />
+                                                                        <button
+                                                                            onClick={() => submitLiveFlag(challenge.id)}
+                                                                            disabled={submittingFlag || !flagInputs[challenge.id]}
+                                                                            className="bg-accent hover:bg-accent/80 text-black font-bold px-6 rounded uppercase tracking-wider text-sm disabled:opacity-50 transition-colors"
+                                                                        >
+                                                                            {submittingFlag ? '...' : 'Submit'}
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex flex-col items-end gap-3 shrink-0">
+                                                                <a
+                                                                    href={api.defaults.baseURL?.replace('/api', '') + challenge.file_url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className={`px-4 py-2 rounded text-xs uppercase font-bold tracking-wider transition-colors inline-flex items-center gap-2 ${challenge.is_bonus ? 'bg-yellow-600 hover:bg-yellow-500 text-black' : 'bg-zinc-800 hover:bg-zinc-700 text-white'}`}
+                                                                >
+                                                                    Download Assets
+                                                                </a>
+                                                                <span className="text-[10px] text-zinc-600 font-mono">ISSUED: {new Date(challenge.created_at).toLocaleString()}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            )}
                                         </div>
-                                    </div>
-                                ))
+                                    )
+                                })
                             )}
                         </div>
                     </motion.div>
