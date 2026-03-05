@@ -81,6 +81,10 @@ export default function Location() {
         if (lowerTitle.includes('forced window')) return 'window';
         if (lowerTitle.includes('empty pill wrap')) return 'blister';
         if (lowerTitle.includes('cracked watch')) return 'watch';
+        if (lowerTitle.includes('lost keys')) return 'keys';
+        if (lowerTitle.includes('stick no bills')) return 'bills';
+        if (lowerTitle.includes('boot prints')) return 'boot';
+        if (lowerTitle.includes('shepherd falls')) return 'shepherd';
         return null;
     };
 
@@ -118,7 +122,7 @@ export default function Location() {
             console.error('Instance error:', err);
             const msg = err.message === 'Max instances reached, try again later'
                 ? err.message
-                : 'Could not reach instance server. Please try again later.';
+                : 'Max instances reached, try again later';
             setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: msg, expiresAt: null } }));
         }
     };
@@ -245,7 +249,10 @@ export default function Location() {
                                             {/* Hint Buttons beneath thumbnail */}
                                             {!activeChallenge.solved && !activeChallenge.is_locked && (
                                                 <div className="flex flex-col gap-2 relative z-10 shrink-0 mt-2">
-                                                    {getInstanceName(activeChallenge.title) !== null && (() => {
+                                                    {(() => {
+                                                        const instanceName = getInstanceName(activeChallenge.title);
+                                                        if (instanceName === null) return null;
+
                                                         const st = instanceStates[activeChallenge.id] || { isStarting: false, url: null, error: null, expiresAt: null };
                                                         const timeLeft = st.expiresAt ? Math.max(0, Math.floor((st.expiresAt - currentTime) / 1000)) : 0;
                                                         const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
@@ -268,34 +275,54 @@ export default function Location() {
                                                                         </button>
 
                                                                         <div className="text-center mt-2">
-                                                                            <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest block mb-1">Investigation Link:</span>
-                                                                            <a
-                                                                                href={st.url}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="text-red-400 hover:text-red-300 text-xs font-mono break-all underline decoration-red-900/50 underline-offset-2"
-                                                                            >
-                                                                                {st.url}
-                                                                            </a>
-                                                                            <p className="text-zinc-500 text-[9px] mt-2 italic px-2">Note: It may take 10-15 seconds for the connection to fully stabilize. If the site fails to load, please refresh the page.</p>
+                                                                            <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest block mb-1">
+                                                                                {instanceName === 'boot' ? 'Connection Command:' : 'Investigation Link:'}
+                                                                            </span>
+                                                                            {instanceName === 'boot' ? (
+                                                                                <div className="flex flex-col gap-2">
+                                                                                    <code className="bg-black/80 text-red-400 p-2 rounded border border-red-900/30 text-xs font-mono break-all select-all">
+                                                                                        nc {st.url.replace(/^https?:\/\//, '').replace(/\/$/, '').replace(':', ' ')}
+                                                                                    </code>
+                                                                                    <p className="text-zinc-500 text-[9px] mt-1 italic px-2">Copy and run this command in your terminal to access the evidence.</p>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <a
+                                                                                        href={st.url}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        className="text-red-400 hover:text-red-300 text-xs font-mono break-all underline decoration-red-900/50 underline-offset-2"
+                                                                                    >
+                                                                                        {st.url}
+                                                                                    </a>
+                                                                                    <p className="text-zinc-500 text-[9px] mt-2 italic px-2">Note: It may take 10-15 seconds for the connection to fully stabilize. If the site fails to load, please refresh the page.</p>
+                                                                                </>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <button
-                                                                        onClick={handleStartInstance}
-                                                                        disabled={st.isStarting}
-                                                                        className={`bg-red-900 hover:bg-red-800 text-white text-xs px-4 py-3 rounded uppercase tracking-wider w-full font-bold transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(153,27,27,0.3)] ${st.isStarting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                                    >
-                                                                        {st.isStarting ? (
-                                                                            <>
-                                                                                <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                                                </svg>
-                                                                                Deploying...
-                                                                            </>
-                                                                        ) : (st.url && timeLeft === 0 ? 'Restart Investigation' : 'Start Investigation')}
-                                                                    </button>
+                                                                    <div className="w-full">
+                                                                        <button
+                                                                            onClick={handleStartInstance}
+                                                                            disabled={st.isStarting}
+                                                                            className={`bg-red-900 hover:bg-red-800 text-white text-xs px-4 py-3 rounded uppercase tracking-wider w-full font-bold transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(153,27,27,0.3)] ${st.isStarting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                        >
+                                                                            {st.isStarting ? (
+                                                                                <>
+                                                                                    <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                                    </svg>
+                                                                                    Deploying...
+                                                                                </>
+                                                                            ) : (st.url && timeLeft === 0 ? 'Restart Investigation' : 'Start Investigation')}
+                                                                        </button>
+                                                                        {st.error && (
+                                                                            <p className="text-red-500 text-[10px] mt-2 text-center uppercase font-bold tracking-tight animate-pulse bg-red-950/20 py-1 rounded border border-red-900/30">
+                                                                                {st.error}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         );

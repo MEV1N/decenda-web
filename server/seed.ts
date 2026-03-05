@@ -43,11 +43,13 @@ const CHALLENGES = [
         id: 'prologue_forensics', location_id: 'prologue',
         title: 'The Test', description: 'I resolved to attend one of his gatherings.\n\nWe sat in a circle, the lamplight casting long shadows upon the paneled walls. One by one, the mourners spoke of sorrow.\n\nWhen his turn came, he discoursed upon suffering as though it were not an affliction but a threshold.\n\n“Some souls,” he said gently, “are prepared to step through.”\n\nHis gaze settled upon me when he uttered those words.\n\nNot long.\n\nBut long enough.\n\nWhen the meeting concluded, he approached and suggested I remain behind for private conversation. He observed that I appeared fatigued. That I bore a hidden burden.\n\nHe smiled with the confidence of one who believes himself understood.\n\nIn that instant, clarity dawned.\n\nHis victims were not chosen at hazard.\n\nThey were examined.\n\nMeasured.\n\nJudged.',
         flag: 'dec{not_r4nd0m_but_ch0s3n@mbc.ctf}', points: 0, unlocksLocations: [],
+        file_url: '/challange/testfindings.pdf',
     },
     {
         id: 'prologue_web', location_id: 'prologue',
         title: 'The Shepherd Falls', description: 'I had taken the precaution of concealment—officers waited beyond earshot.\n\nAt last, the gentleman laid aside his pastoral guise.\n\nHe spoke in hushed tones of release, of serenity, of the crossing from anguish into eternal quiet.\n\nHe termed it mercy.\n\nHe deemed himself indispensable.\n\nWhen I inquired how many he had thus “liberated,” he did not protest.\n\nHe amended my reckoning.\n\n“Five,” he replied evenly.\n\n“You would have been the sixth.”\n\nBefore his hand could reach the syringe secreted within his escritoire, the constables entered.\n\nHe offered no resistance. Displayed no agitation.\n\nOnly disappointment.\n\nAs irons were clasped about his wrists, he inclined his head toward me and whispered:\n\n“You shall come to see it. They were grateful.”\n\nPerhaps, in the disordered chambers of his mind, he believes this.\n\nSuch men do not behold blood.\n\nThey behold design.\n\nYet on this night, the shepherd tended no flock.\n\nOn this night—\n\nHe was the one led away.',
         flag: 'dec{m3rcy_w4s_th3_li3@mbc.ctf}', points: 0, unlocksLocations: [],
+        instance_required: true,
     },
 
     // 1. OLD GARAGE (STARTING)
@@ -115,8 +117,9 @@ const CHALLENGES = [
     },
     {
         id: 'drainage_pill', location_id: 'drainage_pit',
-        title: 'Empty pill wrap', description: 'Killer’s medicine.',
-        flag: 'dec{drainage_pill}', points: 20, unlocksLocations: ['clinic'], // logic: -> Medical Records
+        title: 'Empty pill wrap', description: 'Killer’s medicine. Launch instance to investigate the blister pack markings.',
+        flag: 'dec{drainage_pill}', points: 20, unlocksLocations: ['clinic'],
+        instance_required: true,
     },
     {
         id: 'drainage_mud', location_id: 'drainage_pit',
@@ -179,8 +182,9 @@ const CHALLENGES = [
     },
     {
         id: 'river_boot', location_id: 'riverside_walkway',
-        title: 'Boot prints', description: 'Foot prints with 1 boot and 1 leg. Connected from drainage.',
+        title: 'Boot prints', description: 'Foot prints with 1 boot and 1 leg. Connected from drainage. Launch instance to investigate the pressure patterns.',
         flag: 'dec{river_boot}', points: 10, unlocksLocations: [],
+        instance_required: true,
     },
     {
         id: 'river_heel', location_id: 'riverside_walkway',
@@ -243,8 +247,9 @@ const CHALLENGES = [
     },
     {
         id: 'town_bills', location_id: 'town',
-        title: 'Stick no bills', description: 'Found via The Wall strings.',
+        title: 'Stick no bills', description: 'Found via The Wall strings. Launch instance to check the digital database of community notices.',
         flag: 'dec{town_bills}', points: 10, unlocksLocations: [],
+        instance_required: true,
     },
 
     // POLICE ANNEX
@@ -260,8 +265,9 @@ const CHALLENGES = [
     },
     {
         id: 'annex_keys', location_id: 'police_annex',
-        title: 'Lost keys', description: 'Linked to locked area in clinic.',
-        flag: 'dec{annex_keys}', points: 20, unlocksLocations: ['your_house'], // logic: -> key (house)
+        title: 'Lost keys', description: 'Linked to locked area in clinic. Launch instance to analyze the key cuts and locksmith records.',
+        flag: 'dec{annex_keys}', points: 20, unlocksLocations: ['your_house'],
+        instance_required: true,
     },
     {
         id: 'annex_note', location_id: 'police_annex',
@@ -403,6 +409,7 @@ async function main() {
                 description: chal.description,
                 flag_hash: chal.flag,
                 points: chal.points,
+                instance_required: (chal as any).instance_required || false,
                 unlocksLocations: chal.unlocksLocations,
             }
         });
