@@ -120,9 +120,7 @@ export default function Location() {
             }
         } catch (err: any) {
             console.error('Instance error:', err);
-            const msg = err.message === 'Max instances reached, try again later'
-                ? err.message
-                : 'Max instances reached, try again later';
+            const msg = err.message || 'Failed to start investigation. Please try again.';
             setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: msg, expiresAt: null } }));
         }
     };
