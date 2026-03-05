@@ -85,7 +85,6 @@ model Hint {
   id             String    @id @default(uuid())
   challenge_id   String
   hint_text      String
-  penalty_points Int       @default(10)
   challenge      Challenge @relation(fields: [challenge_id], references: [id])
 }
 

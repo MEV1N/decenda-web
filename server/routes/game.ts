@@ -139,8 +139,7 @@ router.get('/location/:id', authenticate, async (req: AuthRequest, res) => {
             thumbnail_url: ch.thumbnail_url,
             hints: ch.hints.map((h: any) => ({
                 id: h.id,
-                hint_text: h.hint_text,
-                penalty_points: h.penalty_points
+                hint_text: h.hint_text
             }))
         }));
 

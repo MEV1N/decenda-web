@@ -35,6 +35,7 @@ interface Challenge {
     is_locked: boolean;
     locked_instruction?: string | null;
     file_url?: string | null;
+    hints: { id: string, hint_text: string }[];
 }
 
 interface LocationData {
@@ -61,7 +62,7 @@ export default function Location() {
     const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
     const [flagInput, setFlagInput] = useState('');
     const [submitMsg, setSubmitMsg] = useState('');
-    const [revealedHints, setRevealedHints] = useState<number[]>([]);
+    const [revealedHints, setRevealedHints] = useState<string[]>([]);
 
     // Instance states
     const [instanceStates, setInstanceStates] = useState<Record<string, InstanceState>>({});
@@ -292,18 +293,18 @@ export default function Location() {
                                                     <div className="flex flex-col items-center gap-2 w-full">
                                                         <span className="text-zinc-500 uppercase font-bold tracking-widest text-xs h-4">Hints</span>
                                                         <div className="flex justify-center gap-2 w-full h-10">
-                                                            {[1, 2, 3].map((hintNum) => {
-                                                                const isRevealed = revealedHints.includes(hintNum);
+                                                            {activeChallenge.hints.map((hint, idx) => {
+                                                                const isRevealed = revealedHints.includes(hint.id);
                                                                 return (
                                                                     <button
-                                                                        key={hintNum}
-                                                                        onClick={() => setRevealedHints(isRevealed ? [] : [hintNum])} // Toggle the selected hint
+                                                                        key={hint.id}
+                                                                        onClick={() => setRevealedHints(isRevealed ? [] : [hint.id])} // Toggle the selected hint
                                                                         className={`w-10 h-10 flex items-center justify-center rounded text-sm font-bold transition-colors shrink-0 ${isRevealed
                                                                             ? 'bg-accent text-white border border-accent'
                                                                             : 'bg-zinc-800 text-dimmed border border-zinc-700 hover:text-white hover:border-zinc-500'
                                                                             }`}
                                                                     >
-                                                                        {hintNum}
+                                                                        {idx + 1}
                                                                     </button>
                                                                 );
                                                             })}
@@ -314,8 +315,7 @@ export default function Location() {
                                                     {revealedHints.length > 0 && (
                                                         <div className="w-full h-[60px] bg-black/50 border border-zinc-700 rounded p-3 flex flex-col justify-center items-center overflow-y-auto custom-scrollbar shrink-0">
                                                             <span className="text-zinc-300 italic text-center text-xs">
-                                                                {/* Later: Pull real hint text from the backend or challenge data */}
-                                                                Hint {revealedHints[0]}: Look closer at the details.
+                                                                {activeChallenge.hints.find(h => h.id === revealedHints[0])?.hint_text}
                                                             </span>
                                                         </div>
                                                     )}

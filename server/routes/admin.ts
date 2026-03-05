@@ -29,7 +29,11 @@ const upload = multer({ storage });
 router.get('/all-data', async (req, res) => {
     try {
         const locations = await (prisma as any).location.findMany({
-            include: { challenges: true },
+            include: {
+                challenges: {
+                    include: { hints: true }
+                }
+            },
             orderBy: { name: 'asc' }
         });
         const liveChallenges = await (prisma as any).liveChallenge.findMany({
@@ -175,20 +179,23 @@ router.delete('/challenge/:id', async (req, res) => {
 // Create or update a hint
 router.post('/hint', async (req, res) => {
     try {
-        const { id, challenge_id, hint_text, penalty_points } = req.body;
-        const hint = await (prisma as any).hint.upsert({
-            where: { id: id || '' },
-            update: {
-                hint_text,
-                penalty_points: penalty_points ? parseInt(penalty_points.toString()) : 0
-            },
-            create: {
-                challenge_id,
-                hint_text,
-                penalty_points: penalty_points ? parseInt(penalty_points.toString()) : 0
-            }
-        });
-        res.json(hint);
+        const { id, challenge_id, hint_text } = req.body;
+
+        if (id) {
+            const hint = await (prisma as any).hint.update({
+                where: { id },
+                data: { hint_text }
+            });
+            return res.json(hint);
+        } else {
+            const hint = await (prisma as any).hint.create({
+                data: {
+                    challenge_id,
+                    hint_text
+                }
+            });
+            return res.json(hint);
+        }
     } catch (error) {
         console.error('Error creating/updating hint:', error);
         res.status(500).json({ error: 'Internal server error' });

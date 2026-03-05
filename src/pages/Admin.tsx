@@ -264,8 +264,7 @@ export default function Admin() {
         try {
             const res = await api.post('/admin/hint', {
                 challenge_id: storyEditId,
-                hint_text: 'New hint text...',
-                penalty_points: 10
+                hint_text: 'New hint text...'
             });
             setStoryHints([...storyHints, res.data]);
             addToast('Hint added', 'success');
@@ -274,12 +273,11 @@ export default function Admin() {
         }
     };
 
-    const handleUpdateHint = async (hintId: string, text: string, points: number) => {
+    const handleUpdateHint = async (hintId: string, text: string) => {
         try {
             await api.post('/admin/hint', {
                 id: hintId,
-                hint_text: text,
-                penalty_points: points
+                hint_text: text
             });
             addToast('Hint autosaved', 'success');
         } catch (err) {
@@ -595,24 +593,10 @@ export default function Admin() {
                                                     newHints[idx].hint_text = e.target.value;
                                                     setStoryHints(newHints);
                                                 }}
-                                                onBlur={() => handleUpdateHint(hint.id, hint.hint_text, hint.penalty_points)}
+                                                onBlur={() => handleUpdateHint(hint.id, hint.hint_text)}
                                                 className="w-full bg-black border border-zinc-800 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500 min-h-[60px]"
                                                 placeholder="Hint content..."
                                             />
-                                            <div className="flex items-center gap-2">
-                                                <label className="text-[10px] text-dimmed uppercase">Penalty Points:</label>
-                                                <input
-                                                    type="number"
-                                                    value={hint.penalty_points}
-                                                    onChange={(e) => {
-                                                        const newHints = [...storyHints];
-                                                        newHints[idx].penalty_points = parseInt(e.target.value) || 0;
-                                                        setStoryHints(newHints);
-                                                    }}
-                                                    onBlur={() => handleUpdateHint(hint.id, hint.hint_text, hint.penalty_points)}
-                                                    className="bg-black border border-zinc-800 rounded px-2 py-1 text-xs text-white w-20 focus:outline-none focus:border-blue-500"
-                                                />
-                                            </div>
                                         </div>
                                     ))
                                 )}
