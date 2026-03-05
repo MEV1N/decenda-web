@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { prisma } from '../server.js';
+import { deleteLiveChallenge } from '../utils/challengeCleanup.js';
 
 const router = Router();
 router.use(authenticate, requireAdmin);
@@ -27,11 +28,11 @@ const upload = multer({ storage });
 // Get all data for the admin dashboard
 router.get('/all-data', async (req, res) => {
     try {
-        const locations = await prisma.location.findMany({
+        const locations = await (prisma as any).location.findMany({
             include: { challenges: true },
             orderBy: { name: 'asc' }
         });
-        const liveChallenges = await prisma.liveChallenge.findMany({
+        const liveChallenges = await (prisma as any).liveChallenge.findMany({
             orderBy: { created_at: 'desc' }
         });
 
@@ -46,7 +47,7 @@ router.get('/all-data', async (req, res) => {
 router.post('/location', async (req, res) => {
     try {
         const { id, name, description, is_starting } = req.body;
-        const location = await prisma.location.upsert({
+        const location = await (prisma as any).location.upsert({
             where: { id },
             update: { name, description, is_starting },
             create: { id, name, description, is_starting }
@@ -126,7 +127,7 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
             thumbnail_url: thumbnail_url || null
         };
 
-        const challenge = await prisma.challenge.upsert({
+        const challenge = await (prisma as any).challenge.upsert({
             where: { id },
             update: updateData,
             create: createData,
@@ -175,7 +176,7 @@ router.delete('/challenge/:id', async (req, res) => {
 router.post('/hint', async (req, res) => {
     try {
         const { id, challenge_id, hint_text, penalty_points } = req.body;
-        const hint = await prisma.hint.upsert({
+        const hint = await (prisma as any).hint.upsert({
             where: { id: id || '' },
             update: {
                 hint_text,
@@ -221,7 +222,7 @@ router.post('/live-challenge', upload.fields([{ name: 'file', maxCount: 1 }, { n
         const file_url = `/uploads/${file.filename}`;
         const thumbnail_url = thumbnail ? `/uploads/${thumbnail.filename}` : null;
 
-        const liveChallenge = await prisma.liveChallenge.create({
+        const liveChallenge = await (prisma as any).liveChallenge.create({
             data: {
                 title,
                 description,
@@ -283,7 +284,7 @@ router.put('/live-challenge/:id', upload.fields([{ name: 'file', maxCount: 1 }, 
             updateData.thumbnail_url = `/uploads/${thumbnail.filename}`;
         }
 
-        const liveChallenge = await prisma.liveChallenge.update({
+        const liveChallenge = await (prisma as any).liveChallenge.update({
             where: { id },
             data: updateData
         });
@@ -299,27 +300,7 @@ router.put('/live-challenge/:id', upload.fields([{ name: 'file', maxCount: 1 }, 
 router.delete('/live-challenge/:id', async (req, res) => {
     try {
         const { id } = req.params;
-
-        // Find it first to delete the files
-        const challenge = await prisma.liveChallenge.findUnique({ where: { id } });
-
-        if (challenge) {
-            if (challenge.file_url) {
-                const fileName = path.basename(challenge.file_url);
-                const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-            }
-            if (challenge.thumbnail_url) {
-                const fileName = path.basename(challenge.thumbnail_url);
-                const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-            }
-        }
-
-        await prisma.liveChallenge.delete({
-            where: { id }
-        });
-
+        await deleteLiveChallenge(id);
         res.json({ message: 'Live challenge deleted successfully' });
     } catch (error) {
         console.error('Error deleting live challenge:', error);

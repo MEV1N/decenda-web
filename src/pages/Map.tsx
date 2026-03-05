@@ -52,6 +52,22 @@ export default function Map() {
     const [expandedChallengeId, setExpandedChallengeId] = useState<string | null>(null);
     const [flagInputs, setFlagInputs] = useState<Record<string, string>>({});
     const [submittingFlag, setSubmittingFlag] = useState(false);
+    const [currentTime, setCurrentTime] = useState(Date.now());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const getTimerText = (createdAt: string) => {
+        const expiry = new Date(createdAt).getTime() + 20 * 60 * 1000;
+        const remaining = expiry - currentTime;
+        if (remaining <= 0) return 'EXPIRED';
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+
     const prevChallengeIds = useRef<Set<string>>(new Set());
 
     const navigate = useNavigate();
@@ -261,7 +277,14 @@ export default function Map() {
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-4">
-                                                    {challenge.is_bonus && !challenge.is_locked && <span className="text-xs font-bold bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded border border-yellow-500/50 uppercase tracking-widest">Jackpot</span>}
+                                                    {challenge.is_bonus && !challenge.is_locked && (
+                                                        <div className="flex flex-col items-end">
+                                                            <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-widest animate-pulse">Expires in</span>
+                                                            <span className="text-xs font-mono font-bold text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/30">
+                                                                {getTimerText(challenge.created_at)}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                     <span className={`text-sm font-mono font-bold ${challenge.is_locked ? 'text-zinc-700' : 'text-accent/80'}`}>{challenge.points} PTS</span>
                                                     <span className="text-dimmed ml-2">{isExpanded ? '▲' : '▼'}</span>
                                                 </div>

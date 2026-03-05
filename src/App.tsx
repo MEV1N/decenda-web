@@ -26,7 +26,9 @@ function MainLayout() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-body">
       {/* Header */}
       <header className="p-4 border-b border-zinc-800 flex justify-between items-center bg-black/50 backdrop-blur-md z-50">
-        <h1 className="text-2xl font-heading font-bold text-accent tracking-[5px]">DECENDA</h1>
+        <Link to="/" className="hover:opacity-80 transition-opacity">
+          <img src="dec_logo.png" alt="Decenda" className="h-12 md:h-10 w-auto" />
+        </Link>
         {isAuthenticated && (
           <nav className="flex gap-4 items-center">
             {team?.invite_code && (

@@ -246,26 +246,14 @@ export default function Admin() {
             if (storyFile) formData.append('file', storyFile);
             if (storyThumbnail) formData.append('thumbnail', storyThumbnail);
 
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/admin/challenge', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
-            });
-
-            if (response.ok) {
-                addToast('Story Case file updated successfully', 'success');
-                resetStoryForm();
-                fetchChallenges();
-            } else {
-                const data = await response.json();
-                addToast(data.error || 'Failed to update story case file', 'error');
-            }
-        } catch (err) {
+            await api.post('/admin/challenge', formData);
+            addToast('Story Case file updated successfully', 'success');
+            resetStoryForm();
+            fetchChallenges();
+        } catch (err: any) {
             console.error(err);
-            addToast('Network error', 'error');
+            const serverMsg = err?.response?.data?.error || '';
+            addToast(`Failed to update story case file${serverMsg ? ': ' + serverMsg : ''}`, 'error');
         } finally {
             setLoading(false);
         }

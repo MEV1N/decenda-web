@@ -244,11 +244,11 @@ router.post('/submit-live-flag', authenticate, async (req: AuthRequest, res) => 
             return res.status(403).json({ error: 'This challenge is currently locked.' });
         }
 
-        if (!challenge.flag_hash) {
+        if (!(challenge as any).flag_hash) {
             return res.status(400).json({ error: 'No flag set for this challenge.' });
         }
 
-        if (flag !== challenge.flag_hash) {
+        if (flag !== (challenge as any).flag_hash) {
             return res.status(400).json({ error: 'Incorrect flag' });
         }
 
@@ -267,14 +267,14 @@ router.post('/submit-live-flag', authenticate, async (req: AuthRequest, res) => 
         });
 
         // Award points to team
-        if (challenge.points > 0) {
-            await prisma.team.update({
+        if ((challenge as any).points > 0) {
+            await (prisma as any).team.update({
                 where: { id: teamId },
-                data: { points: { increment: challenge.points } }
+                data: { points: { increment: (challenge as any).points } }
             });
         }
 
-        res.json({ message: 'Correct flag! Points awarded.', pointsAwarded: challenge.points });
+        res.json({ message: 'Correct flag! Points awarded.', pointsAwarded: (challenge as any).points });
 
     } catch (error) {
         console.error('Live flag submission error:', error);
