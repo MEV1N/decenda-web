@@ -296,4 +296,45 @@ router.post('/prologue', authenticate, async (req: AuthRequest, res) => {
     }
 });
 
+// Serve assets from the database
+router.get('/asset/:model/:id', authenticate, async (req: AuthRequest, res) => {
+    try {
+        const { model, id } = req.params;
+        const type = typeof req.query.type === 'string' ? req.query.type : '';
+
+        if (!['challenge', 'liveChallenge'].includes(model)) {
+            return res.status(400).send('Invalid model');
+        }
+
+        const item = await (prisma as any)[model as string].findUnique({ where: { id } });
+
+        if (!item) return res.status(404).send('Not found');
+
+        let data: Buffer | null = null;
+        let mime: string | null = null;
+        let fileName: string | null = null;
+
+        if (type === 'thumbnail') {
+            data = item.thumbnail_data;
+            mime = item.thumbnail_mime;
+        } else {
+            data = item.file_data;
+            mime = item.file_mime;
+            fileName = (item as any).file_name;
+        }
+
+        if (!data) return res.status(404).send('Data not found');
+
+        res.setHeader('Content-Type', mime || 'application/octet-stream');
+        if (fileName) {
+            // Use inline for images/pdfs, and ensure correct filename for downloads
+            res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+        }
+        res.send(data);
+    } catch (error) {
+        console.error('Error serving asset:', error);
+        res.status(500).send('Internal server error');
+    }
+});
+
 export default router;

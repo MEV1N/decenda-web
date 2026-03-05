@@ -9,20 +9,8 @@ import { deleteLiveChallenge } from '../utils/challengeCleanup.js';
 const router = Router();
 router.use(authenticate, requireAdmin);
 
-// Multer setup for local file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = path.join(process.cwd(), 'server', 'uploads');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
+// Multer setup for memory storage (for Vercel persistence via DB)
+const storage = multer.memoryStorage();
 const upload = multer({
     storage,
     limits: { fileSize: 100 * 1024 * 1024 } // 100MB
@@ -131,8 +119,17 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
             locked_instruction: locked_instruction || null
         };
 
-        if (file_url !== undefined) updateData.file_url = file_url;
-        if (thumbnail_url !== undefined) updateData.thumbnail_url = thumbnail_url;
+        if (file) {
+            updateData.file_data = file.buffer;
+            updateData.file_name = file.originalname;
+            updateData.file_mime = file.mimetype;
+            updateData.file_url = `/api/game/asset/challenge/${id}?type=file&t=${Date.now()}`;
+        }
+        if (thumbnail) {
+            updateData.thumbnail_data = thumbnail.buffer;
+            updateData.thumbnail_mime = thumbnail.mimetype;
+            updateData.thumbnail_url = `/api/game/asset/challenge/${id}?type=thumbnail&t=${Date.now()}`;
+        }
 
         const createData: any = {
             id,
@@ -146,8 +143,13 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
             unlocksPoints: unlocksPoints === 'true' || unlocksPoints === true,
             is_locked: is_locked === 'true' || is_locked === true,
             locked_instruction: locked_instruction || null,
-            file_url: file_url || null,
-            thumbnail_url: thumbnail_url || null
+            file_url: file ? `/api/game/asset/challenge/${id}?type=file` : null,
+            thumbnail_url: thumbnail ? `/api/game/asset/challenge/${id}?type=thumbnail` : null,
+            file_data: file ? file.buffer : null,
+            file_name: file ? file.originalname : null,
+            file_mime: file ? file.mimetype : null,
+            thumbnail_data: thumbnail ? thumbnail.buffer : null,
+            thumbnail_mime: thumbnail ? thumbnail.mimetype : null
         };
 
         console.log('[Admin] Upserting challenge in DB...');
@@ -178,20 +180,13 @@ router.delete('/challenge/:id', async (req, res) => {
         // Find it first to delete the files
         const challenge = await (prisma as any).challenge.findUnique({ where: { id } });
 
+        // For DB storage, we don't need to manually delete disk files anymore
+        // but let's keep it clean if files still exist from old mode
         if (challenge) {
-            if (challenge.file_url) {
+            if (challenge.file_url && challenge.file_url.startsWith('/uploads')) {
                 const fileName = path.basename(challenge.file_url);
                 const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
-                if (fs.existsSync(filePath)) {
-                    try { fs.unlinkSync(filePath); } catch (e) { }
-                }
-            }
-            if (challenge.thumbnail_url) {
-                const fileName = path.basename(challenge.thumbnail_url);
-                const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
-                if (fs.existsSync(filePath)) {
-                    try { fs.unlinkSync(filePath); } catch (e) { }
-                }
+                if (fs.existsSync(filePath)) try { fs.unlinkSync(filePath); } catch (e) { }
             }
         }
 
@@ -256,16 +251,21 @@ router.post('/live-challenge', upload.fields([{ name: 'file', maxCount: 1 }, { n
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        const file_url = `/uploads/${file.filename}`;
-        const thumbnail_url = thumbnail ? `/uploads/${thumbnail.filename}` : null;
+        const file_url = `/api/game/asset/liveChallenge/${Date.now()}?type=file`; // Temp ID will be replaced
+        const thumbnail_url = thumbnail ? `/api/game/asset/liveChallenge/${Date.now()}?type=thumbnail` : null;
 
         const liveChallenge = await (prisma as any).liveChallenge.create({
             data: {
                 title,
                 description,
-                file_url,
+                file_url: 'temp', // Updated below
                 flag_hash: flag_hash || null,
-                thumbnail_url,
+                thumbnail_url: 'temp',
+                file_data: file.buffer,
+                file_name: file.originalname,
+                file_mime: file.mimetype,
+                thumbnail_data: thumbnail ? thumbnail.buffer : null,
+                thumbnail_mime: thumbnail ? thumbnail.mimetype : null,
                 is_bonus: is_bonus === 'true' || is_bonus === true,
                 points: points ? parseInt(points) : 0,
                 is_locked: is_locked === 'true' || is_locked === true,
@@ -273,7 +273,16 @@ router.post('/live-challenge', upload.fields([{ name: 'file', maxCount: 1 }, { n
             }
         });
 
-        res.status(201).json(liveChallenge);
+        // Update URLs with correct ID
+        const finalChallenge = await (prisma as any).liveChallenge.update({
+            where: { id: liveChallenge.id },
+            data: {
+                file_url: `/api/game/asset/liveChallenge/${liveChallenge.id}?type=file`,
+                thumbnail_url: thumbnail ? `/api/game/asset/liveChallenge/${liveChallenge.id}?type=thumbnail` : null
+            }
+        });
+
+        res.status(201).json(finalChallenge);
     } catch (error: any) {
         console.error('Error creating live challenge:', error);
         res.status(500).json({
@@ -303,30 +312,17 @@ router.put('/live-challenge/:id', upload.fields([{ name: 'file', maxCount: 1 }, 
             locked_instruction: locked_instruction || null
         };
 
-        const existingChallenge = await (prisma as any).liveChallenge.findUnique({ where: { id } });
-
         if (file) {
-            // Delete the old file if it exists
-            if (existingChallenge && existingChallenge.file_url) {
-                const fileName = path.basename(existingChallenge.file_url);
-                const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
-                if (fs.existsSync(filePath)) {
-                    try { fs.unlinkSync(filePath); } catch (e) { }
-                }
-            }
-            updateData.file_url = `/uploads/${file.filename}`;
+            updateData.file_data = file.buffer;
+            updateData.file_name = file.originalname;
+            updateData.file_mime = file.mimetype;
+            updateData.file_url = `/api/game/asset/liveChallenge/${id}?type=file&t=${Date.now()}`;
         }
 
         if (thumbnail) {
-            // Delete the old thumbnail if it exists
-            if (existingChallenge && existingChallenge.thumbnail_url) {
-                const fileName = path.basename(existingChallenge.thumbnail_url);
-                const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
-                if (fs.existsSync(filePath)) {
-                    try { fs.unlinkSync(filePath); } catch (e) { }
-                }
-            }
-            updateData.thumbnail_url = `/uploads/${thumbnail.filename}`;
+            updateData.thumbnail_data = thumbnail.buffer;
+            updateData.thumbnail_mime = thumbnail.mimetype;
+            updateData.thumbnail_url = `/api/game/asset/liveChallenge/${id}?type=thumbnail&t=${Date.now()}`;
         }
 
         const liveChallenge = await (prisma as any).liveChallenge.update({

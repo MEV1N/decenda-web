@@ -52,6 +52,11 @@ model Challenge {
   locked_instruction String?
   file_url           String?
   thumbnail_url      String?
+  file_data          Bytes?
+  file_name          String?
+  file_mime          String?
+  thumbnail_data     Bytes?
+  thumbnail_mime     String?
   unlocksPoints     Boolean  @default(true) // Should completing this give points? Prologue gives 0 points but maybe unlocks
   unlocksLocations  String[] // Array of location ids this challenge unlocks
   location          Location @relation(fields: [location_id], references: [id])
@@ -95,6 +100,11 @@ model LiveChallenge {
   file_url    String
   flag_hash   String?
   thumbnail_url String?
+  file_data          Bytes?
+  file_name          String?
+  file_mime          String?
+  thumbnail_data     Bytes?
+  thumbnail_mime     String?
   is_bonus    Boolean  @default(false)
   points             Int      @default(0)
   is_locked          Boolean  @default(false)
