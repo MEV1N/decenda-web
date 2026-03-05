@@ -97,19 +97,29 @@ export default function Location() {
         try {
             const baseUrl = import.meta.env.VITE_INSTANCE_SERVER || 'http://10.3.4.141:5000';
             const res = await fetch(`${baseUrl}/start?chal=${instanceName}`);
+
+            const data = await res.json();
+
             if (!res.ok) {
+                const errorMsg = data.error || data.message || '';
+                if (errorMsg.toLowerCase().includes('max') || errorMsg.toLowerCase().includes('limit') || res.status === 503) {
+                    throw new Error('Max instances reached, try again later');
+                }
                 throw new Error('Failed to start instance');
             }
-            const data = await res.json();
+
             if (data.url) {
                 const expiresAt = Date.now() + 15 * 60 * 1000;
                 setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: data.url, error: null, expiresAt } }));
             } else {
                 setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: 'Failed to retrieve instance URL.', expiresAt: null } }));
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Instance error:', err);
-            setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: 'Could not reach instance server. Please try again later.', expiresAt: null } }));
+            const msg = err.message === 'Max instances reached, try again later'
+                ? err.message
+                : 'Could not reach instance server. Please try again later.';
+            setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: msg, expiresAt: null } }));
         }
     };
 
