@@ -186,14 +186,10 @@ export default function Admin() {
 
         try {
             if (editId) {
-                await api.put(`/admin/live-challenge/${editId}`, formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.put(`/admin/live-challenge/${editId}`, formData);
                 addToast('Case file updated successfully', 'success');
             } else {
-                await api.post('/admin/live-challenge', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.post('/admin/live-challenge', formData);
                 addToast('Case file deployed successfully', 'success');
             }
 
