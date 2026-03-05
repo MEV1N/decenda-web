@@ -21,19 +21,9 @@ export default function Login() {
                 login(res.data.token, res.data.team);
                 navigate(res.data.team.role === 'ADMIN' ? '/admin' : '/');
             } else {
-                // If the user inputs the admin password directly into the team code input
-                if (inviteCode === 'Dec@2k26#AdMins!') {
-                    // We need a team name to register the admin, let's create a dummy one
-                    const randomAdminName = 'Admin_' + Math.floor(Math.random() * 10000);
-                    const res = await api.post('/auth/create', { teamName: randomAdminName, password: inviteCode });
-                    login(res.data.token, res.data.team);
-                    navigate('/admin');
-                    return;
-                }
-
                 const res = await api.post('/auth/join', { inviteCode });
                 login(res.data.token, res.data.team);
-                navigate('/');
+                navigate(res.data.team.role === 'ADMIN' ? '/admin' : '/');
             }
         } catch (err: any) {
             console.error("LOGIN ERROR:", err);

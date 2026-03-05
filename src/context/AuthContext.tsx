@@ -52,7 +52,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setTeam(newTeam);
     };
 
-    const logout = () => {
+    const logout = async () => {
+        const savedTeam = localStorage.getItem('team');
+        if (savedTeam) {
+            try {
+                const parsedTeam = JSON.parse(savedTeam);
+                // Notify the server to decrement members_count (fire and forget)
+                await api.post('/auth/logout', { teamId: parsedTeam.id });
+            } catch (err) {
+                // Silently ignore - logout should always proceed even if API call fails
+                console.warn('Logout API call failed, proceeding with local logout:', err);
+            }
+        }
         localStorage.removeItem('token');
         localStorage.removeItem('team');
         setToken(null);

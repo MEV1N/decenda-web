@@ -43,6 +43,13 @@ interface LocationData {
     description: string;
 }
 
+interface InstanceState {
+    isStarting: boolean;
+    url: string | null;
+    error: string | null;
+    expiresAt: number | null;
+}
+
 export default function Location() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -56,7 +63,54 @@ export default function Location() {
     const [submitMsg, setSubmitMsg] = useState('');
     const [revealedHints, setRevealedHints] = useState<number[]>([]);
 
+    // Instance states
+    const [instanceStates, setInstanceStates] = useState<Record<string, InstanceState>>({});
+    const [currentTime, setCurrentTime] = useState(Date.now());
+
+    useEffect(() => {
+        const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, []);
+
     const { addToast } = useToast();
+
+    const getInstanceName = (title: string): string | null => {
+        const lowerTitle = title.toLowerCase();
+        if (lowerTitle.includes('discarded shoe')) return 'shoe';
+        if (lowerTitle.includes('forced window')) return 'window';
+        if (lowerTitle.includes('empty pill wrap')) return 'blister';
+        if (lowerTitle.includes('cracked watch')) return 'watch';
+        return null;
+    };
+
+    const handleStartInstance = async () => {
+        if (!activeChallenge) return;
+        const instanceName = getInstanceName(activeChallenge.title);
+        if (!instanceName) {
+            setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: 'Invalid configuration for this instance.', expiresAt: null } }));
+            return;
+        }
+
+        setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: true, url: null, error: null, expiresAt: null } }));
+
+        try {
+            const baseUrl = import.meta.env.VITE_INSTANCE_SERVER || 'http://10.3.4.141:5000';
+            const res = await fetch(`${baseUrl}/start?chal=${instanceName}`);
+            if (!res.ok) {
+                throw new Error('Failed to start instance');
+            }
+            const data = await res.json();
+            if (data.url) {
+                const expiresAt = Date.now() + 15 * 60 * 1000;
+                setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: data.url, error: null, expiresAt } }));
+            } else {
+                setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: 'Failed to retrieve instance URL.', expiresAt: null } }));
+            }
+        } catch (err) {
+            console.error('Instance error:', err);
+            setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: 'Could not reach instance server. Please try again later.', expiresAt: null } }));
+        }
+    };
 
     useEffect(() => {
         async function fetchDetails() {
@@ -180,6 +234,61 @@ export default function Location() {
                                             {/* Hint Buttons beneath thumbnail */}
                                             {!activeChallenge.solved && !activeChallenge.is_locked && (
                                                 <div className="flex flex-col gap-2 relative z-10 shrink-0 mt-2">
+                                                    {getInstanceName(activeChallenge.title) !== null && (() => {
+                                                        const st = instanceStates[activeChallenge.id] || { isStarting: false, url: null, error: null, expiresAt: null };
+                                                        const timeLeft = st.expiresAt ? Math.max(0, Math.floor((st.expiresAt - currentTime) / 1000)) : 0;
+                                                        const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                                                        const secs = (timeLeft % 60).toString().padStart(2, '0');
+
+                                                        return (
+                                                            <div className="mb-2 w-full">
+                                                                {st.url && timeLeft > 0 ? (
+                                                                    <div className="flex flex-col gap-2">
+                                                                        <div className="bg-black/50 p-2 rounded border border-red-900/50 flex flex-col items-center">
+                                                                            <span className="text-red-500 font-bold text-[10px] mb-1 tracking-wider uppercase">Instance Active</span>
+                                                                            <span className="text-red-400 text-sm font-mono mt-1 font-bold">{mins}:{secs}</span>
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={handleStartInstance}
+                                                                            disabled={st.isStarting}
+                                                                            className={`bg-red-900 hover:bg-red-800 text-white text-xs px-4 py-2 rounded uppercase tracking-wider w-full text-center font-bold transition-colors shadow-[0_0_10px_rgba(153,27,27,0.4)] ${st.isStarting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                        >
+                                                                            {st.isStarting ? 'Deploying...' : 'Restart Investigation'}
+                                                                        </button>
+
+                                                                        <div className="text-center mt-2">
+                                                                            <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest block mb-1">Investigation Link:</span>
+                                                                            <a
+                                                                                href={st.url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="text-red-400 hover:text-red-300 text-xs font-mono break-all underline decoration-red-900/50 underline-offset-2"
+                                                                            >
+                                                                                {st.url}
+                                                                            </a>
+                                                                            <p className="text-zinc-500 text-[9px] mt-2 italic px-2">Note: It may take 10-15 seconds for the connection to fully stabilize. If the site fails to load, please refresh the page.</p>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={handleStartInstance}
+                                                                        disabled={st.isStarting}
+                                                                        className={`bg-red-900 hover:bg-red-800 text-white text-xs px-4 py-3 rounded uppercase tracking-wider w-full font-bold transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(153,27,27,0.3)] ${st.isStarting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                    >
+                                                                        {st.isStarting ? (
+                                                                            <>
+                                                                                <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                                </svg>
+                                                                                Deploying...
+                                                                            </>
+                                                                        ) : (st.url && timeLeft === 0 ? 'Restart Investigation' : 'Start Investigation')}
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                     <div className="flex flex-col items-center gap-2 w-full">
                                                         <span className="text-zinc-500 uppercase font-bold tracking-widest text-xs h-4">Hints</span>
                                                         <div className="flex justify-center gap-2 w-full h-10">
@@ -382,12 +491,6 @@ export default function Location() {
                                                                 Download File
                                                             </a>
                                                         </div>
-                                                    </div>
-                                                )}{activeChallenge.instance_required && !activeChallenge.is_locked && (
-                                                    <div className="mb-6">
-                                                        <button className="bg-blue-900 hover:bg-blue-800 text-white text-xs px-4 py-2 rounded uppercase tracking-wider w-full">
-                                                            Start Instance
-                                                        </button>
                                                     </div>
                                                 )}
 

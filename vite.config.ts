@@ -10,6 +10,11 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      '/instance': {
+        target: 'http://10.3.4.141:5000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/instance/, ''),
+      },
     },
   },
 })
