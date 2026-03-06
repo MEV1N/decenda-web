@@ -56,7 +56,7 @@ const CHALLENGES = [
     {
         id: 'garage_hammer', location_id: 'old_garage',
         title: 'Hammer with blood', description: 'At the Old Garage crime scene, investigators recovered the suspected murder weapon — a blood‑stained hammer resting in a pool of darkened oil.\nThe strikes were controlled.\nMeasured.\nIntentional.\nThe weapon has been archived as:\nhammer.jpg\nInitial inspection shows nothing beyond a standard forensic evidence photograph.\nHowever, deeper analysis suggests the image file may contain concealed data hidden beneath its surface.\nYour task:\nInvestigate the image carefully and recover the hidden flag.',
-        flag: 'dec{garage_hammer}', points: 10, unlocksLocations: ['police_annex'], // logic: -> Reckless Hammer
+        flag: 'dec{garage_hammer}', points: 10, file_url: '/challanges/spot 1/harmer with old blood/hammer.jpg', unlocksLocations: ['police_annex'], // logic: -> Reckless Hammer
     },
     {
         id: 'garage_pin', location_id: 'old_garage',
@@ -66,7 +66,7 @@ const CHALLENGES = [
     {
         id: 'garage_boot', location_id: 'old_garage',
         title: 'Boot prints in oil', description: 'At the Old Garage crime scene, investigators recovered a high‑resolution image of unusual boot impressions preserved in motor oil.\nThe gait pattern was repetitive.\nHeel‑heavy.\nDeliberate.\nThe image has been archived as:\nboot_printj.jpeg\nInitial inspection shows nothing beyond standard forensic photography.\nHowever, deeper analysis suggests the file contains hidden data.\nYour task:\nInvestigate the image file carefully.',
-        flag: 'dec{garage_boot}', points: 10, unlocksLocations: ['drainage_pit'], // logic: -> Boot prints (Drainage pit)
+        flag: 'dec{garage_boot}', points: 10, file_url: '/challanges/spot 1/boot print in oil/boot_printf (1).jpg', unlocksLocations: ['drainage_pit'], // logic: -> Boot prints (Drainage pit)
     },
     {
         id: 'garage_watch', location_id: 'old_garage',
@@ -76,7 +76,7 @@ const CHALLENGES = [
     {
         id: 'garage_nail', location_id: 'old_garage',
         title: 'Rested nail with cloth', description: 'At the Old Garage crime scene, investigators documented a rusted nail protruding from a support beam.\nCloth fibers were caught on its edge.\nDomestic.\nOut of place.\nThe evidence has been archived as:\nrusted_nail.jpg\nInitial inspection shows nothing beyond a standard forensic photograph of a corroded nail with trapped fabric strands.\nYour task:\nInvestigate the image carefully and recover the hidden flag.',
-        flag: 'dec{garage_nail}', points: 10, unlocksLocations: ['residential_alley'], // logic: -> Missing Towel
+        flag: 'dec{garage_nail}', points: 10, file_url: '/challanges/spot 1/rusted nail with cloth/rustednail.jpg', unlocksLocations: ['residential_alley'], // logic: -> Missing Towel
     },
     {
         id: 'garage_shelve', location_id: 'old_garage',
@@ -86,29 +86,29 @@ const CHALLENGES = [
     {
         id: 'garage_oil', location_id: 'old_garage',
         title: 'Oil residue', description: 'At the Old Garage crime scene, investigators collected a sample of oil residue traced along the exit path.\nThe stain pattern curved.\nConsistent.\nRepetitive.\nThe residue analysis archive has been stored as:\noil_residue.apk\nInitial inspection suggests it is a standard mobile application package related to forensic logging.\nHowever, deeper analysis indicates the file may contain concealed information within the apk.\nYour task:\nInvestigate the file carefully.',
-        flag: 'dec{garage_oil}', points: 10, unlocksLocations: ['tram_station'], // logic: -> oil res on rail
+        flag: 'dec{garage_oil}', points: 10, file_url: '/challanges/oil.apk', unlocksLocations: ['tram_station'], // logic: -> oil res on rail
     },
 
     // 2. DRAINAGE PIT
     {
         id: 'drainage_boot', location_id: 'drainage_pit',
         title: 'Boot prints', description: 'At the Drainage Pit crime scene, investigators documented two separate boot impressions preserved in damp sediment.\nThe stride pattern was unstable.\nRepeated.\nFamiliar.\nInitial inspection shows nothing beyond standard forensic photographs of footwear impressions.\nHowever, deeper analysis suggests the files may contain concealed information hidden within their structure.\nYour task:\nInvestigate the image files carefully.',
-        flag: 'dec{drainage_boot}', points: 10, unlocksLocations: ['riverside_walkway'], // logic: -> foot prints with 1 boot and 1 leg
+        flag: 'dec{drainage_boot}', points: 10, file_url: '/challanges/spot 9/mud on platform edge/mudtram', unlocksLocations: ['riverside_walkway'], // logic: -> foot prints with 1 boot and 1 leg
     },
     {
         id: 'drainage_blood', location_id: 'drainage_pit',
         title: 'Vertical blood smears', description: 'At the Drainage Pit crime scene, investigators documented vertical blood smears along the inner concrete wall.\nThe streaks were downward.\nControlled.\nUnresisting.\nThe forensic documentation has been archived as:\nVertical_Blood_Smears.pdf\nInitial inspection reveals a standard incident report describing the blood pattern analysis and scene observations.\nYour task:\nInvestigate the file carefully and recover the complete flag.',
-        flag: 'dec{drainage_blood}', points: 10, unlocksLocations: ['tram_station'], // logic: -> old Blood smears on wall
+        flag: 'dec{drainage_blood}', points: 10, file_url: '/challanges/Vertical Blood smears/Vertical_Blood_Smears.pdf', unlocksLocations: ['tram_station'], // logic: -> old Blood smears on wall
     },
     {
         id: 'drainage_scratch', location_id: 'drainage_pit',
         title: 'Concrete scratches', description: 'At the Drainage Pit crime scene, investigators documented deep scratch marks carved into the inner concrete wall.\nThe grooves were vertical.\nUneven.\nRepeated.\nThe evidence has been archived as:\nconcrete_scratches.png\nInitial inspection shows nothing beyond a standard forensic image of surface damage.\nYour task:\nInvestigate the image file carefully.',
-        flag: 'dec{drainage_scratch}', points: 10, unlocksLocations: [],
+        flag: 'dec{drainage_scratch}', points: 10, file_url: '/challanges/Concrete Scratches/HiddenScratches.png', unlocksLocations: [],
     },
     {
         id: 'drainage_glove', location_id: 'drainage_pit',
         title: 'Right leather glove', description: 'At the Drainage Pit crime scene, investigators recovered a single right-hand glove lodged behind a concrete ledge.\nIts pair was missing.\nIts placement deliberate.\nLeft behind.\nThe evidence has been archived as:\nright_glove.png\nInitial inspection shows nothing beyond a standard forensic photograph of the recovered glove.\nYour task:\nInvestigate the image file carefully and recover the hidden flag.',
-        flag: 'dec{drainage_glove}', points: 10, unlocksLocations: ['residential_alley'], // logic: -> Left glove
+        flag: 'dec{drainage_glove}', points: 10, file_url: '/challanges/Right leather glove/right_glove.png', unlocksLocations: ['residential_alley'], // logic: -> Left glove
     },
     {
         id: 'drainage_shoe', location_id: 'drainage_pit',
@@ -124,12 +124,12 @@ const CHALLENGES = [
     {
         id: 'drainage_mud', location_id: 'drainage_pit',
         title: 'Mud trail ending mid wall', description: 'At the Drainage Pit crime scene, investigators observed a mud trail that advanced toward the concrete wall — and then stopped abruptly.\nNo return prints.\nNo fall marks.\nNo continuation.\nThe evidence has been archived as:\nmud_trail.txt\nInitial inspection shows a plain text file containing an unusual sequence of binary data.\nYour task:\nInvestigate the file carefully.',
-        flag: 'dec{drainage_mud}', points: 5, unlocksLocations: [], // dead end
+        flag: 'dec{drainage_mud}', points: 5, file_url: '/challanges/Mud trail Ending/bootprints2.png', unlocksLocations: [], // dead end
     },
     {
         id: 'drainage_chalk', location_id: 'drainage_pit',
         title: 'Faint chalk symbol', description: 'At the Drainage Pit crime scene, investigators documented a faint chalk symbol marked along the concrete wall.\nThe lines were deliberate.\nRepetitive.\nIntentional.\nThe marking has been archived as:\nenc_flag\nInitial inspection suggests it is a standard encoded data encoded using chalk_enc.py.\nYour task:\nInvestigate the file carefully.',
-        flag: 'dec{drainage_chalk}', points: 10, unlocksLocations: ['riverside_walkway'], // logic: -> riverside walkway (dead end)
+        flag: 'dec{drainage_chalk}', points: 10, file_url: '/challanges/Chalk Symbol/layer2.bmp', unlocksLocations: ['riverside_walkway'], // logic: -> riverside walkway (dead end)
     },
     {
         id: 'drainage_water', location_id: 'drainage_pit',
@@ -141,7 +141,7 @@ const CHALLENGES = [
     {
         id: 'alley_shoes', location_id: 'residential_alley',
         title: 'Shoes aligned', description: 'At the Residential Alley crime scene, investigators observed a neatly arranged pair of shoes placed beside the entrance.\nThey were aligned precisely.\nSymmetrical.\nDeliberate.\nThe evidence has been archived as:\nshoes.apk\nInitial inspection suggests it is a standard mobile application package with no visible anomalies.\nYour task:\nInvestigate the file carefully.',
-        flag: 'dec{alley_shoes}', points: 10, unlocksLocations: [],
+        flag: 'dec{alley_shoes}', points: 10, file_url: '/challanges/spot 5/socks with dried mud/socks-mud.zip', unlocksLocations: [],
     },
     {
         id: 'alley_window', location_id: 'residential_alley',
@@ -156,7 +156,7 @@ const CHALLENGES = [
     {
         id: 'alley_mirror', location_id: 'residential_alley',
         title: 'Dirty mirror', description: 'At the Residential Alley crime scene, investigators documented a fogged and partially wiped bathroom mirror.\nThe surface was smeared.\nDistorted.\nUntrusted.\nThe evidence has been archived as:\ndirty_mirror.jpg\nInitial inspection shows nothing beyond a standard forensic photograph of a stained mirror surface.\nHowever, deeper analysis suggests the image may conceal more info hidden beneath its visible layer.\nYour task:\nInvestigate the image carefully and recover the hidden flag.',
-        flag: 'dec{alley_mirror}', points: 15, unlocksLocations: ['clinic'], // logic: -> Burned Mirror
+        flag: 'dec{alley_mirror}', points: 15, file_url: '/challanges/spot 3/dirty mirror/Dirty.png', unlocksLocations: ['clinic'], // logic: -> Burned Mirror
     },
     {
         id: 'alley_towel', location_id: 'residential_alley',
@@ -166,19 +166,19 @@ const CHALLENGES = [
     {
         id: 'alley_receipt', location_id: 'residential_alley',
         title: 'Pharmacy receipt', description: 'At the Town investigation site, officers recovered a pharmacy receipt linked to recent medication purchases.\nThe timestamp matched prior incidents.\nThe prescription was altered.\nThe paper trail was incomplete.\nThe evidence has been archived as:\npharmacy_receipt.jpg\nInitial inspection reveals a standard receipt image and a separate file containing an unusual dash-separated hexadecimal sequence.\nHowever, deeper analysis suggests the image may conceal critical information required to interpret the encrypted data.\nYour task:\nInvestigate file carefully and recover the hidden flag.',
-        flag: 'dec{alley_receipt}', points: 30, unlocksLocations: [], // logic -> The SOMNARCH (dead end)
+        flag: 'dec{alley_receipt}', points: 30, file_url: '/challanges/spot 3/pharmacy reciept/recipt.jpg', unlocksLocations: [], // logic -> The SOMNARCH (dead end)
     },
     {
         id: 'alley_calendar', location_id: 'residential_alley',
         title: 'Calendar with circled dates', description: 'Dates marked in red.',
-        flag: 'dec{alley_calendar}', points: 30, unlocksLocations: ['clinic'], // logic: -> dates match missing clinic log entries
+        flag: 'dec{alley_calendar}', points: 30, file_url: '/challanges/spot 3/cleander with circled date/token.py', unlocksLocations: ['clinic'], // logic: -> dates match missing clinic log entries
     },
 
     // RIVERSIDE WALKWAY
     {
         id: 'river_chalk', location_id: 'riverside_walkway',
         title: 'Chalk symbol', description: 'At the Riverside Walkway crime scene, investigators documented a faint chalk marking drawn near the water\'s edge.\nThe lines were repeated.\nDirectional.\nGuiding.\nThe evidence has been archived as:\nlayer2.bmp\nInitial inspection shows nothing beyond a standard image of the riverside walkway surface.\nYour task:\nInvestigate the image file carefully and recover the hidden flag.',
-        flag: 'dec{river_chalk}', points: 5, unlocksLocations: [],
+        flag: 'dec{river_chalk}', points: 5, file_url: '/challanges/Chalk crime 4/layer2.bmp', unlocksLocations: [],
     },
     {
         id: 'river_boot', location_id: 'riverside_walkway',
@@ -194,19 +194,19 @@ const CHALLENGES = [
     {
         id: 'river_mud', location_id: 'riverside_walkway',
         title: 'Mud side compression', description: 'Heavy sinking mud.',
-        flag: 'dec{river_mud}', points: 20, unlocksLocations: ['detective_office'], // logic: -> socks with dried mud
+        flag: 'dec{river_mud}', points: 20, file_url: '/challanges/Mudside Compression/mud.zip', unlocksLocations: ['detective_office'], // logic: -> socks with dried mud
     },
 
     // DETECTIVE'S OFFICE
     {
         id: 'office_socks', location_id: 'detective_office',
         title: 'Socks with dried mud', description: 'Linked to riverside mud.',
-        flag: 'dec{office_socks}', points: 20, unlocksLocations: ['tram_station'], // logic: -> Mud on platform edge
+        flag: 'dec{office_socks}', points: 20, file_url: '/challanges/spot 5/socks with dried mud/socks-mud.zip', unlocksLocations: ['tram_station'], // logic: -> Mud on platform edge
     },
     {
         id: 'office_wall', location_id: 'detective_office',
         title: 'The Wall (Photos, Strings, Notes)', description: 'Timeline and observations linking the crime.',
-        flag: 'dec{office_wall}', points: 30, unlocksLocations: ['town'], // logic: -> stick no bills
+        flag: 'dec{office_wall}', points: 30, file_url: '/challanges/spot 5/the wall photos/wall', unlocksLocations: ['town'], // logic: -> stick no bills
     },
     {
         id: 'office_folder', location_id: 'detective_office',
@@ -269,7 +269,7 @@ const CHALLENGES = [
     {
         id: 'annex_hammer', location_id: 'police_annex',
         title: 'The reckless hammer', description: 'At the Old Garage crime scene, investigators recovered a second image of the weapon — a reckless hammer captured mid-swing in surveillance reconstruction.\nThe motion was aggressive.\nDistracting.\nLoud.\nThe evidence has been archived as:\nreckless_hammer.jpg\nInitial inspection shows nothing beyond a standard forensic image of the recovered hammer.\nHowever, deeper analysis suggests the image may conceal additional data related to hidden network activity.\nYour task:\nInvestigate the image file carefully and uncover what lies beneath the surface.',
-        flag: 'dec{annex_hammer}', points: 10, unlocksLocations: [],
+        flag: 'dec{annex_hammer}', points: 10, file_url: '/challanges/spot 7/the reckless hammer/hammer.jpg', unlocksLocations: [],
     },
     {
         id: 'annex_keys', location_id: 'police_annex',
@@ -287,7 +287,7 @@ const CHALLENGES = [
     {
         id: 'clinic_records_med', location_id: 'clinic',
         title: 'Medical records', description: 'Matches empty pill wrap.',
-        flag: 'dec{clinic_records_med}', points: 30, unlocksLocations: ['residential_alley'], // logic: -> Pharmacy receipt
+        flag: 'dec{clinic_records_med}', points: 30, file_url: '/challanges/Medical Records/Medical Records.zip', unlocksLocations: ['residential_alley'], // logic: -> Pharmacy receipt
     },
     {
         id: 'clinic_logs', location_id: 'clinic',
@@ -297,12 +297,12 @@ const CHALLENGES = [
     {
         id: 'clinic_mirror', location_id: 'clinic',
         title: 'Burned Mirror', description: 'Connected to dirty mirror.',
-        flag: 'dec{clinic_mirror}', points: 20, unlocksLocations: [],
+        flag: 'dec{clinic_mirror}', points: 20, file_url: '/challanges/Burned Mirror/mirror-20260306T040057Z-3-001.zip', unlocksLocations: [],
     },
     {
         id: 'clinic_note', location_id: 'clinic',
         title: 'Handwritten note in drawer', description: 'Matches annex note.',
-        flag: 'dec{clinic_note}', points: 30, unlocksLocations: ['your_car'], // logic: -> Bill in dashboard
+        flag: 'dec{clinic_note}', points: 30, file_url: '/challanges/Clinic Recods/note.txt', unlocksLocations: ['your_car'], // logic: -> Bill in dashboard
     },
     {
         id: 'clinic_lock', location_id: 'clinic',
@@ -312,46 +312,46 @@ const CHALLENGES = [
     {
         id: 'clinic_records', location_id: 'clinic',
         title: 'Clinic records', description: 'From dashboard bill.',
-        flag: 'dec{clinic_records}', points: 40, unlocksLocations: ['your_house'], // logic: -> Pill records
+        flag: 'dec{clinic_records}', points: 40, file_url: '/challanges/Clinic Recods/final_scan.png', unlocksLocations: ['your_house'], // logic: -> Pill records
     },
 
     // TRAM STATION
     {
         id: 'tram_oil', location_id: 'tram_station',
         title: 'Oil residue on rail', description: 'At the Train Station crime scene, investigators documented a thin oil residue trailing along the platform edge.\nThe spill was controlled.\nDirectional.\nRecent.\nThe forensic data has been archived as:\nstation_oil_trace.txt\nInitial inspection reveals a set of hexadecimal values accompanied by a fixed initialization vector.\nHowever, deeper analysis suggests the encryption process may contain a structural weakness that exposes hidden information.\nYour task:\nInvestigate the provided data carefully and recover the hidden flag.',
-        flag: 'dec{tram_oil}', points: 15, unlocksLocations: [],
+        flag: 'dec{tram_oil}', points: 15, file_url: '/challanges/spot 9/Oil residue on rail/cytopto.txt', unlocksLocations: [],
     },
     {
         id: 'tram_mud', location_id: 'tram_station',
         title: 'Mud on platform edge', description: 'Matches socks with mud.',
-        flag: 'dec{tram_mud}', points: 15, unlocksLocations: [],
+        flag: 'dec{tram_mud}', points: 15, file_url: '/challanges/spot 9/mud on platform edge/mudtram', unlocksLocations: [],
     },
     {
         id: 'tram_recorder', location_id: 'tram_station',
         title: 'Recorder with breathing', description: 'From archived files.',
-        flag: 'dec{tram_recorder}', points: 30, unlocksLocations: ['clinic'], // logic: -> Security log gaps
+        flag: 'dec{tram_recorder}', points: 30, file_url: '/challanges/spot 9/Recorder with breathing/wav.pdf.gz', unlocksLocations: ['clinic'], // logic: -> Security log gaps
     },
     {
         id: 'tram_blood', location_id: 'tram_station',
         title: 'Old Blood smears on wall', description: 'Matches vertical smears from pit.',
-        flag: 'dec{tram_blood}', points: 15, unlocksLocations: [],
+        flag: 'dec{tram_blood}', points: 15, file_url: '/challanges/spot 9/old Blood smears on wall/old Blood smears on wall-20260306T035619Z-3-001.zip', unlocksLocations: [],
     },
 
     // YOUR CAR
     {
         id: 'car_thoughts', location_id: 'your_car',
         title: 'Desperate thoughts', description: '(dead end)',
-        flag: 'dec{car_thoughts}', points: 10, unlocksLocations: [],
+        flag: 'dec{car_thoughts}', points: 10, file_url: '/challanges/Desperate Thoughts/thoughts.dd.sda1', unlocksLocations: [],
     },
     {
         id: 'car_bills', location_id: 'your_car',
         title: 'Bills in dashboard', description: 'From clinic note.',
-        flag: 'dec{car_bills}', points: 30, unlocksLocations: ['clinic'], // logic: -> Clinic records
+        flag: 'dec{car_bills}', points: 30, file_url: '/challanges/Bills in dashboard/clinic_records.dat', unlocksLocations: ['clinic'], // logic: -> Clinic records
     },
     {
         id: 'car_decenda', location_id: 'your_car',
         title: 'Decenda records', description: 'Secretive findings.',
-        flag: 'dec{car_decenda}', points: 30, unlocksLocations: ['detective_office'], // logic: -> decenda folder
+        flag: 'dec{car_decenda}', points: 30, file_url: '/challanges/Decenda records/car_console', unlocksLocations: ['detective_office'], // logic: -> decenda folder
     },
 
     // YOUR HOUSE
@@ -363,22 +363,22 @@ const CHALLENGES = [
     {
         id: 'house_kettle', location_id: 'your_house',
         title: 'Burned kettle', description: '(dead end)',
-        flag: 'dec{house_kettle}', points: 10, unlocksLocations: [],
+        flag: 'dec{house_kettle}', points: 10, file_url: '/challanges/spot 11/burned kettle/crypto_archive_challenge.zip', unlocksLocations: [],
     },
     {
         id: 'house_shoe', location_id: 'your_house',
         title: 'Other shoe which was left out', description: 'Major Role. Matches the shoe store.',
-        flag: 'dec{house_shoe}', points: 100, unlocksLocations: [],
+        flag: 'dec{house_shoe}', points: 100, file_url: '/challanges/spot 11/other shoe was left/challenge.png', unlocksLocations: [],
     },
     {
         id: 'house_room', location_id: 'your_house',
         title: 'Unordered room', description: '(dead end)',
-        flag: 'dec{house_room}', points: 10, unlocksLocations: [],
+        flag: 'dec{house_room}', points: 10, file_url: '/challanges/spot 11/unordered room/archive.zip', unlocksLocations: [],
     },
     {
         id: 'house_pills', location_id: 'your_house',
         title: 'Pill records and pills', description: 'From clinic records.',
-        flag: 'dec{house_pills}', points: 50, unlocksLocations: [],
+        flag: 'dec{house_pills}', points: 50, file_url: '/challanges/spot 11/pill records/pillrecords.zip', unlocksLocations: [],
     },
     {
         id: 'house_paper', location_id: 'your_house',

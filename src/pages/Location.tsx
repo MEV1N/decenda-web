@@ -100,8 +100,9 @@ export default function Location() {
         setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: true, url: null, error: null, expiresAt: null } }));
 
         try {
-            const res = await api.post(`/game/instance/${instanceName}`);
-            const data = res.data;
+            const baseUrl = import.meta.env.VITE_INSTANCE_SERVER || 'http://10.3.4.141:5000';
+            const res = await fetch(`${baseUrl}/start?chal=${instanceName}`);
+            const data = await res.json();
 
             if (data.url) {
                 const expiresAt = Date.now() + 15 * 60 * 1000;
@@ -110,7 +111,7 @@ export default function Location() {
                 setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: 'Failed to retrieve instance URL.', expiresAt: null } }));
             }
         } catch (err: any) {
-            const msg = err.response?.data?.error || err.message || 'Failed to start investigation. Please try again.';
+            const msg = 'Failed to start instance.';
             setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: msg, expiresAt: null } }));
         }
     };
