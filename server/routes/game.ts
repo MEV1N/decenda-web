@@ -9,36 +9,39 @@ router.get('/map', authenticate, async (req: AuthRequest, res) => {
     try {
         const teamId = req.team!.teamId;
 
-        const unlocked = await prisma.unlockedLocation.findMany({
-            where: { team_id: teamId },
-            select: { location_id: true }
-        });
-
-        const unlockedIds = unlocked.map((u: { location_id: string }) => u.location_id);
-
-        const allLocations = await prisma.location.findMany();
-
-        const challenges = await prisma.challenge.findMany({
-            select: { location_id: true, unlocksLocations: true }
+        const allLocations = await prisma.location.findMany({
+            include: {
+                unlockedBy: {
+                    where: { team_id: teamId },
+                    select: { team_id: true }
+                },
+                challenges: {
+                    select: { id: true, unlocksLocations: true }
+                }
+            }
         });
 
         const edges: { source: string, target: string }[] = [];
-        for (const c of challenges) {
-            if (c.unlocksLocations && c.unlocksLocations.length > 0) {
-                for (const target of c.unlocksLocations) {
-                    edges.push({ source: c.location_id, target });
+        for (const loc of allLocations) {
+            for (const ch of loc.challenges) {
+                if (ch.unlocksLocations && ch.unlocksLocations.length > 0) {
+                    for (const target of ch.unlocksLocations) {
+                        edges.push({ source: loc.id, target });
+                    }
                 }
             }
         }
 
         const uniqueEdges = Array.from(new Set(edges.map(e => JSON.stringify(e)))).map(e => JSON.parse(e));
-
         const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
 
         res.json({
             locations: allLocations.map((loc: any) => ({
-                ...loc,
-                unlocked: hasOverride || loc.is_starting || unlockedIds.includes(loc.id)
+                id: loc.id,
+                name: loc.name,
+                description: loc.description,
+                is_starting: loc.is_starting,
+                unlocked: hasOverride || loc.is_starting || loc.unlockedBy.length > 0
             })),
             edges: uniqueEdges
         });
@@ -91,33 +94,34 @@ router.get('/location/:id', authenticate, async (req: AuthRequest, res) => {
         const teamId = req.team!.teamId;
         const locationId = req.params.id as string;
 
-        const location = await prisma.location.findUnique({ where: { id: locationId } });
+        const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
+
+        const location = await prisma.location.findUnique({
+            where: { id: locationId },
+            include: {
+                challenges: {
+                    include: {
+                        solves: {
+                            where: { team_id: teamId }
+                        },
+                        hints: true
+                    }
+                },
+                unlockedBy: !hasOverride ? {
+                    where: { team_id: teamId }
+                } : false
+            }
+        });
+
         if (!location) {
             return res.status(404).json({ error: 'Location not found' });
         }
 
-        const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
-
-        if (!hasOverride && !location.is_starting) {
-            const isUnlocked = await prisma.unlockedLocation.findUnique({
-                where: { team_id_location_id: { team_id: teamId, location_id: locationId } }
-            });
-            if (!isUnlocked) {
-                return res.status(403).json({ error: 'Location locked' });
-            }
+        if (!hasOverride && !location.is_starting && location.unlockedBy.length === 0) {
+            return res.status(403).json({ error: 'Location locked' });
         }
 
-        const challenges = await prisma.challenge.findMany({
-            where: { location_id: locationId },
-            include: {
-                solves: {
-                    where: { team_id: teamId }
-                },
-                hints: true
-            }
-        });
-
-        const formattedChallenges = challenges.map((ch: any) => ({
+        const formattedChallenges = location.challenges.map((ch: any) => ({
             id: ch.id,
             title: ch.title,
             description: ch.description,
@@ -135,7 +139,12 @@ router.get('/location/:id', authenticate, async (req: AuthRequest, res) => {
         }));
 
         res.json({
-            location,
+            location: {
+                id: location.id,
+                name: location.name,
+                description: location.description,
+                is_starting: location.is_starting
+            },
             challenges: formattedChallenges
         });
 
