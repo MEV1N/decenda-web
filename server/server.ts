@@ -103,23 +103,23 @@ if (process.env.NODE_ENV !== 'production') {
 import { deleteLiveChallenge } from './utils/challengeCleanup.js';
 
 // Background task to delete expired jackpot challenges
-setInterval(async () => {
-    try {
-        const expiredChallenges = await (prisma as any).liveChallenge.findMany({
-            where: {
-                is_bonus: true,
-                created_at: {
-                    lt: new Date(Date.now() - 20 * 60 * 1000) // 20 minutes ago
-                }
-            }
-        });
+// setInterval(async () => {
+//     try {
+//         const expiredChallenges = await (prisma as any).liveChallenge.findMany({
+//             where: {
+//                 is_bonus: true,
+//                 created_at: {
+//                     lt: new Date(Date.now() - 20 * 60 * 1000) // 20 minutes ago
+//                 }
+//             }
+//         });
 
-        for (const challenge of expiredChallenges) {
-            await deleteLiveChallenge(challenge.id);
-        }
-    } catch (error) {
-        // Silently handle if Prisma is not ready or other errors during background cleanup
-    }
-}, 30 * 1000); // Check every 30 seconds
+//         for (const challenge of expiredChallenges) {
+//             await deleteLiveChallenge(challenge.id);
+//         }
+//     } catch (error) {
+//         // Silently handle if Prisma is not ready or other errors during background cleanup
+//     }
+// }, 30 * 1000); // Check every 30 seconds
 
 export default app;

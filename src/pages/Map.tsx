@@ -75,6 +75,8 @@ export default function Map() {
     useAuth();
 
 
+    const isPolling = useRef(false);
+
     useEffect(() => {
         let mounted = true;
 
@@ -107,6 +109,8 @@ export default function Map() {
         }
 
         async function pollLiveChallenges() {
+            if (isPolling.current) return;
+            isPolling.current = true;
             try {
                 const res = await api.get('/game/live-challenges');
                 if (!mounted) return;
@@ -124,11 +128,13 @@ export default function Map() {
                 prevChallengeIds.current = new Set(challenges.map(c => c.id));
             } catch {
                 // Silently fail polling to not disrupt user
+            } finally {
+                isPolling.current = false;
             }
         }
 
         initializeBoard();
-        const interval = setInterval(pollLiveChallenges, 10000);
+        const interval = setInterval(pollLiveChallenges, 30000);
 
         return () => {
             mounted = false;
