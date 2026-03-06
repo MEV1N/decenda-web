@@ -86,6 +86,7 @@ export default function Location() {
         if (lowerTitle.includes('shepherd falls')) return 'shepherd';
         if (lowerTitle.includes('medicine and parasomnia records')) return 'meds';
         if (lowerTitle.includes('boot shop')) return 'bootshop';
+        if (lowerTitle.includes('calendar with circled dates')) return 'cal';
         return null;
     };
 

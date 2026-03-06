@@ -25,7 +25,7 @@ const challengeFileMap: Record<string, string | null> = {
     'alley_left_glove': null, // Lost keys / glove
     'alley_mirror': '/challanges/spot 3/dirty mirror/Dirty.png',
     'alley_receipt': '/challanges/spot 3/pharmacy reciept/recipt.jpg',
-    'alley_calendar': '/challanges/spot 3/cleander with circled date/token.py',
+    'alley_calendar': null, // Calendar with circled dates
 
     // RIVERSIDE WALKWAY
     'river_chalk': '/challanges/Chalk crime 4/layer2.bmp',
