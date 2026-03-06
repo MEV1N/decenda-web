@@ -40,7 +40,7 @@ const challengeFileMap: Record<string, string | null> = {
     'office_records': null, // Medicine and parasomnia records
 
     // TOWN
-    'town_boot': null, // Boot shop
+    'town_boot': '/challanges/Boot shop/bootshop.py', // Boot shop
     'town_bills': null, // Stick no bills
 
     // POLICE ANNEX
