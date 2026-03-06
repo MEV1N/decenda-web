@@ -4,10 +4,89 @@ import { prisma } from '../server.js';
 
 const router = Router();
 
+// GET /api/game/init - Consolidated initial data for the map
+router.get('/init', authenticate, async (req: AuthRequest, res) => {
+    try {
+        const teamId = req.team!.teamId;
+        const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
+
+        const [allLocations, liveChallenges, teamData] = await Promise.all([
+            prisma.location.findMany({
+                include: {
+                    unlockedBy: {
+                        where: { team_id: teamId },
+                        select: { team_id: true }
+                    },
+                    challenges: {
+                        select: { id: true, unlocksLocations: true }
+                    }
+                }
+            }),
+            (prisma as any).liveChallenge.findMany({
+                orderBy: { created_at: 'desc' },
+                include: {
+                    solves: teamId ? {
+                        where: { team_id: teamId }
+                    } : false
+                }
+            }),
+            prisma.team.findUnique({
+                where: { id: teamId },
+                select: { id: true, name: true, points: true, has_seen_prologue: true }
+            })
+        ]);
+
+        const edges: { source: string, target: string }[] = [];
+        for (const loc of allLocations) {
+            for (const ch of loc.challenges) {
+                if (ch.unlocksLocations && ch.unlocksLocations.length > 0) {
+                    for (const target of ch.unlocksLocations) {
+                        edges.push({ source: loc.id, target });
+                    }
+                }
+            }
+        }
+
+        const uniqueEdges = Array.from(new Set(edges.map(e => JSON.stringify(e)))).map(e => JSON.parse(e));
+
+        const formattedLive = liveChallenges.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            file_url: c.file_url,
+            thumbnail_url: c.thumbnail_url,
+            is_bonus: c.is_bonus,
+            points: c.points,
+            is_locked: hasOverride ? false : c.is_locked,
+            locked_instruction: c.locked_instruction,
+            created_at: c.created_at,
+            has_solved: c.solves?.length > 0
+        }));
+
+        res.json({
+            locations: allLocations.map((loc: any) => ({
+                id: loc.id,
+                name: loc.name,
+                description: loc.description,
+                is_starting: loc.is_starting,
+                unlocked: hasOverride || loc.is_starting || loc.unlockedBy.length > 0
+            })),
+            edges: uniqueEdges,
+            liveChallenges: formattedLive,
+            team: teamData
+        });
+
+    } catch (error) {
+        console.error('Error in /init:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // GET /api/game/map
 router.get('/map', authenticate, async (req: AuthRequest, res) => {
     try {
         const teamId = req.team!.teamId;
+        const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
 
         const allLocations = await prisma.location.findMany({
             include: {
@@ -33,7 +112,6 @@ router.get('/map', authenticate, async (req: AuthRequest, res) => {
         }
 
         const uniqueEdges = Array.from(new Set(edges.map(e => JSON.stringify(e)))).map(e => JSON.parse(e));
-        const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
 
         res.json({
             locations: allLocations.map((loc: any) => ({
@@ -93,7 +171,6 @@ router.get('/location/:id', authenticate, async (req: AuthRequest, res) => {
     try {
         const teamId = req.team!.teamId;
         const locationId = req.params.id as string;
-
         const hasOverride = req.team?.teamName?.toLowerCase() === 'test' || req.team?.role === 'ADMIN';
 
         const location = await prisma.location.findUnique({
@@ -117,7 +194,7 @@ router.get('/location/:id', authenticate, async (req: AuthRequest, res) => {
             return res.status(404).json({ error: 'Location not found' });
         }
 
-        if (!hasOverride && !location.is_starting && location.unlockedBy.length === 0) {
+        if (!hasOverride && !location.is_starting && (location.unlockedBy as any).length === 0) {
             return res.status(403).json({ error: 'Location locked' });
         }
 

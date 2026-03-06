@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || (isProduction ? '/api' : 'http:/
 
 export const api = axios.create({
     baseURL: API_URL,
-    timeout: 10000,
+    timeout: 7000,
 });
 
 api.interceptors.request.use((config) => {
@@ -19,6 +19,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        if (error.code === 'ECONNABORTED' || error.message?.includes('Network Error')) {
+            // Transform to a more helpful error for the user
+            error.message = 'The server is busy or the database connection limit has been reached. Please try again in a few seconds.';
+        }
         return Promise.reject(error);
     }
 );

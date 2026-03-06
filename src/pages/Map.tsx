@@ -76,29 +76,37 @@ export default function Map() {
 
 
     useEffect(() => {
-        async function fetchMap() {
+        let mounted = true;
+
+        async function initializeBoard() {
             try {
-                const res = await api.get('/game/map');
-                const locs: LocationData[] = res.data.locations
+                setLoading(true);
+                const res = await api.get('/game/init');
+                if (!mounted) return;
+
+                // 1. Process Map
+                const mapData = res.data;
+                const locs: LocationData[] = mapData.locations
                     .filter((loc: any) => loc.id !== 'prologue')
                     .map((loc: any) => ({
                         ...loc,
-                        unlocked: loc.is_starting || res.data.locations.some((l: any) => l.id === loc.id && loc.unlocked) // API returns unlocked flag
+                        unlocked: loc.is_starting || loc.unlocked // Use the pre-calculated unlocked flag from server
                     }));
-
                 setLocations(locs);
-            } catch {
+
+                // 2. Process Live Challenges
+                const challenges: LiveChallenge[] = mapData.liveChallenges;
+                setLiveChallenges(challenges);
+                prevChallengeIds.current = new Set(challenges.map(c => c.id));
+
+            } catch (error) {
+                console.error("Initialization error:", error);
             } finally {
-                setLoading(false);
+                if (mounted) setLoading(false);
             }
         }
-        fetchMap();
-    }, []);
 
-    useEffect(() => {
-        let mounted = true;
-
-        async function fetchLiveChallenges() {
+        async function pollLiveChallenges() {
             try {
                 const res = await api.get('/game/live-challenges');
                 if (!mounted) return;
@@ -113,15 +121,14 @@ export default function Map() {
                         addToast('NEW CASE FILE RECEIVED', 'warning');
                     }
                 }
-
-                // Update refs
                 prevChallengeIds.current = new Set(challenges.map(c => c.id));
             } catch {
+                // Silently fail polling to not disrupt user
             }
         }
 
-        fetchLiveChallenges();
-        const interval = setInterval(fetchLiveChallenges, 60000);
+        initializeBoard();
+        const interval = setInterval(pollLiveChallenges, 10000);
 
         return () => {
             mounted = false;

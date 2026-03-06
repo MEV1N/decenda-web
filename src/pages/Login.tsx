@@ -26,11 +26,13 @@ export default function Login() {
                 navigate(res.data.team.role === 'ADMIN' ? '/admin' : '/');
             }
         } catch (err: any) {
-
             const status = err.response?.status;
             let errMsg = 'Authentication failed (500)';
 
-            if (status === 404 && mode === 'join') {
+            if (!err.response) {
+                // Network error or timeout (handled by axios interceptor)
+                errMsg = err.message || 'Server connection timed out. Please try again.';
+            } else if (status === 404 && mode === 'join') {
                 errMsg = 'Invalid team code';
             } else {
                 const errorData = err.response?.data?.error;
