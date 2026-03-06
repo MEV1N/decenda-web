@@ -240,7 +240,8 @@ router.post('/instance/:name', authenticate, async (req: AuthRequest, res) => {
 
         res.json(data);
     } catch (error: any) {
-        res.status(500).json({ error: 'Failed to reach instance server. Please contact an admin.' });
+        console.error('[INSTANCE_PROXY_ERROR]:', error.message, error.cause || error);
+        res.status(500).json({ error: 'Failed to reach instance server. Please contact an admin.', details: error.message });
     }
 });
 
