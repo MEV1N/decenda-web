@@ -11,7 +11,7 @@ const challengeFileMap: Record<string, string | null> = {
     'garage_oil': '/challanges/oil.apk',
 
     // DRAINAGE PIT
-    'drainage_boot': '/challanges/spot 9/mud on platform edge/mudtram',
+    'drainage_boot': '/challanges/drainage boots.zip',
     'drainage_blood': '/challanges/Vertical Blood smears/Vertical_Blood_Smears.pdf',
     'drainage_scratch': '/challanges/Concrete Scratches/HiddenScratches.png',
     'drainage_glove': '/challanges/Right leather glove/right_glove.png',
