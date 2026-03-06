@@ -8,6 +8,7 @@ const challengeFileMap: Record<string, string | null> = {
     'garage_boot': '/challanges/spot 1/boot print in oil/boot_printf (1).jpg',
     'garage_nail': '/challanges/spot 1/rusted nail with cloth/rustednail.jpg',
     'garage_watch': null, // Cracked watch
+    'garage_oil': '/challanges/oil.apk',
 
     // DRAINAGE PIT
     'drainage_boot': '/challanges/spot 9/mud on platform edge/mudtram',

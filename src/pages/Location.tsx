@@ -101,6 +101,12 @@ export default function Location() {
         setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: true, url: null, error: null, expiresAt: null } }));
 
         try {
+            if (instanceName === 'cal') {
+                const expiresAt = Date.now() + 15 * 60 * 1000;
+                setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: 'http://10.3.4.141:27406', error: null, expiresAt } }));
+                return;
+            }
+
             const baseUrl = import.meta.env.VITE_INSTANCE_SERVER || 'http://10.3.4.141:5000';
             const res = await fetch(`${baseUrl}/start?chal=${instanceName}`);
             const data = await res.json();
