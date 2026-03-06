@@ -121,7 +121,7 @@ export default function Map() {
         }
 
         fetchLiveChallenges();
-        const interval = setInterval(fetchLiveChallenges, 10000);
+        const interval = setInterval(fetchLiveChallenges, 60000);
 
         return () => {
             mounted = false;

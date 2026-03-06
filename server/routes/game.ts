@@ -16,15 +16,6 @@ router.get('/map', authenticate, async (req: AuthRequest, res) => {
 
         const unlockedIds = unlocked.map((u: { location_id: string }) => u.location_id);
 
-        const availableLocations = await prisma.location.findMany({
-            where: {
-                OR: [
-                    { id: { in: unlockedIds } },
-                    { is_starting: true }
-                ]
-            }
-        });
-
         const allLocations = await prisma.location.findMany();
 
         const challenges = await prisma.challenge.findMany({
