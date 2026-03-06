@@ -11,7 +11,7 @@ const challengeFileMap: Record<string, string | null> = {
     'garage_oil': '/challanges/oil.apk',
 
     // DRAINAGE PIT
-    'drainage_boot': '/challanges/drainage boots.zip',
+    'drainage_boot': '/drainage boots.zip',
     'drainage_blood': '/challanges/Vertical Blood smears/Vertical_Blood_Smears.pdf',
     'drainage_scratch': '/challanges/Concrete Scratches/HiddenScratches.png',
     'drainage_glove': '/challanges/Right leather glove/right_glove.png',
@@ -40,7 +40,7 @@ const challengeFileMap: Record<string, string | null> = {
     'office_records': null, // Medicine and parasomnia records
 
     // TOWN
-    'town_boot': '/challanges/Boot shop/bootshop.zip', // Boot shop
+    'town_boot': '/challanges/bootshop.zip', // Boot shop
     'town_bills': null, // Stick no bills
 
     // POLICE ANNEX
