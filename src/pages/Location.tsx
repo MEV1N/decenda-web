@@ -302,9 +302,9 @@ export default function Location() {
 
                                                                         <div className="text-center mt-2">
                                                                             <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest block mb-1">
-                                                                                {['boot', 'bootshop'].includes(instanceName || '') ? 'Connection Command:' : 'Investigation Link:'}
+                                                                                {['boot', 'bootshop', 'cal'].includes(instanceName || '') ? 'Connection Command:' : 'Investigation Link:'}
                                                                             </span>
-                                                                            {['boot', 'bootshop'].includes(instanceName || '') ? (
+                                                                            {['boot', 'bootshop', 'cal'].includes(instanceName || '') ? (
                                                                                 <div className="flex flex-col gap-2">
                                                                                     <code className="bg-black/80 text-red-400 p-2 rounded border border-red-900/30 text-xs font-mono break-all select-all">
                                                                                         nc {st.url.replace(/^https?:\/\//, '').replace(/\/$/, '').replace(':', ' ')}

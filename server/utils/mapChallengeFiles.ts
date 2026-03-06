@@ -16,22 +16,22 @@ const challengeFileMap: Record<string, string | null> = {
     'drainage_glove': '/challanges/Right leather glove/right_glove.png',
     'drainage_shoe': null, // Discarded shoe
     'drainage_pill': null, // Empty blister
-    'drainage_mud': '/challanges/Mud trail Ending/bootprints2.png',
-    'drainage_chalk': '/challanges/Chalk Symbol/layer2.bmp',
+    'drainage_mud': '/challanges/Mud trail Ending/mud_txt',
+    'drainage_chalk': '/challanges/Chalk Symbol.zip',
 
     // RESIDENTIAL ALLEY
-    'alley_shoes': '/challanges/spot 5/socks with dried mud/socks-mud.zip',
+    'alley_shoes': '/challanges/shoes.apk',
     'alley_window': null, // Forced window
     'alley_left_glove': null, // Lost keys / glove
     'alley_mirror': '/challanges/spot 3/dirty mirror/Dirty.png',
     'alley_receipt': '/challanges/spot 3/pharmacy reciept/recipt.jpg',
-    'alley_calendar': null, // Calendar with circled dates
+    'alley_calendar': '/challanges/cleander with circled date/token.py', // Calendar with circled dates
 
     // RIVERSIDE WALKWAY
     'river_chalk': '/challanges/Chalk crime 4/layer2.bmp',
     'river_mud': '/challanges/Mudside Compression/mud.zip',
     'river_boot': null, // Boot prints
-    'river_heel': null, // Heel pivot (the fall?)
+    'river_heel': '/challenges/Heel pivot Impression/clues.txt', // Heel pivot (the fall?)
 
     // DETECTIVE'S OFFICE
     'office_socks': '/challanges/spot 5/socks with dried mud/socks-mud.zip',
