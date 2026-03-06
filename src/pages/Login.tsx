@@ -26,7 +26,7 @@ export default function Login() {
                 navigate(res.data.team.role === 'ADMIN' ? '/admin' : '/');
             }
         } catch (err: any) {
-            console.error("LOGIN ERROR:", err);
+
             const status = err.response?.status;
             let errMsg = 'Authentication failed (500)';
 
@@ -109,7 +109,6 @@ export default function Login() {
                             placeholder="Invite Code"
                             value={inviteCode}
                             onChange={(e) => setInviteCode(e.target.value)}
-                            // Removed maxLength={6} to allow the longer admin password
                             required
                         />
                     )}

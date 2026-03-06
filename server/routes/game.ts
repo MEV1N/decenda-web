@@ -231,22 +231,19 @@ router.post('/instance/:name', authenticate, async (req: AuthRequest, res) => {
         const { name } = req.params;
         const baseUrl = process.env.VITE_INSTANCE_SERVER || 'http://10.3.4.141:5000';
 
-        console.log(`[Proxy] Starting instance for: ${name} via ${baseUrl}`);
-
         const response = await fetch(`${baseUrl}/start?chal=${name}`);
         const data = await response.json();
 
         if (!response.ok) {
-            console.error(`[Proxy] Instance server error:`, data);
             return res.status(response.status).json(data);
         }
 
         res.json(data);
     } catch (error: any) {
-        console.error('[Proxy] Failed to contact instance server:', error);
         res.status(500).json({ error: 'Failed to reach instance server. Please contact an admin.' });
     }
 });
+
 
 // POST /api/game/submit-live-flag
 router.post('/submit-live-flag', authenticate, async (req: AuthRequest, res) => {
@@ -322,7 +319,8 @@ router.post('/prologue', authenticate, async (req: AuthRequest, res) => {
 // Serve assets from the database
 router.get('/asset/:model/:id', authenticate, async (req: AuthRequest, res) => {
     try {
-        const { model, id } = req.params;
+        const model = String(req.params.model);
+        const id = String(req.params.id);
         const type = typeof req.query.type === 'string' ? req.query.type : '';
 
         if (!['challenge', 'liveChallenge'].includes(model)) {
@@ -349,9 +347,10 @@ router.get('/asset/:model/:id', authenticate, async (req: AuthRequest, res) => {
         if (!data) return res.status(404).send('Data not found');
 
         res.setHeader('Content-Type', mime || 'application/octet-stream');
-        if (fileName) {
-            // Use inline for images/pdfs, and ensure correct filename for downloads
-            res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+        if (type === 'thumbnail') {
+            res.setHeader('Content-Disposition', `inline${fileName ? `; filename="${fileName}"` : ''}`);
+        } else {
+            res.setHeader('Content-Disposition', `attachment${fileName ? `; filename="${fileName}"` : ''}`);
         }
         res.send(data);
     } catch (error) {

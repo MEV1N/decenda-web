@@ -23,7 +23,6 @@ const getImageForLocation = (id?: string) => {
 };
 
 
-// Hardcoded files removed in favor of dynamic file_url from database
 
 interface Challenge {
     id: string;
@@ -111,11 +110,46 @@ export default function Location() {
                 setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: 'Failed to retrieve instance URL.', expiresAt: null } }));
             }
         } catch (err: any) {
-            console.error('Instance error:', err);
-            const msg = err.message || 'Failed to start investigation. Please try again.';
+            const msg = err.response?.data?.error || err.message || 'Failed to start investigation. Please try again.';
             setInstanceStates(prev => ({ ...prev, [activeChallenge.id]: { isStarting: false, url: null, error: msg, expiresAt: null } }));
         }
     };
+
+    const handleAuthenticatedDownload = async (fileUrl: string, suggestedName?: string) => {
+        // Static public files (manually uploaded to public/) — direct link
+        if (!fileUrl.startsWith('/api/')) {
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = suggestedName || fileUrl.split('/').pop() || 'evidence-file';
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            return;
+        }
+        // API-served files (stored in DB) — use native fetch with auth token
+        // Note: cannot use the axios `api` instance here because its baseURL (/api)
+        // would produce a double-path: /api/api/game/asset/...
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(fileUrl, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Download failed');
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = suggestedName || 'evidence-file';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch {
+            addToast('Failed to download file. Please try again.', 'error');
+        }
+    };
+
 
     useEffect(() => {
         async function fetchDetails() {
@@ -505,21 +539,19 @@ export default function Location() {
                                                     <div className="mb-6 bg-zinc-900 border border-zinc-700 rounded p-4 shadow-inner">
                                                         <p className="mb-3 text-zinc-300 text-sm italic">Additional related evidence file(s):</p>
                                                         <div className="flex flex-wrap gap-2">
-                                                            <a
-                                                                href={activeChallenge.file_url}
-                                                                download
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
+                                                            <button
+                                                                onClick={() => handleAuthenticatedDownload(activeChallenge.file_url!)}
                                                                 className="inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs px-3 py-2 rounded transition-colors border border-zinc-600"
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                                 </svg>
                                                                 Download File
-                                                            </a>
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 )}
+
 
                                                 {activeChallenge.is_locked ? null : activeChallenge.solved ? (
                                                     <div className="text-center p-4 bg-green-900/20 text-green-500 border border-green-900 rounded font-mono">

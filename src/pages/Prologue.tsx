@@ -41,9 +41,7 @@ export default function Prologue() {
             // Update the context's team to have has_seen_prologue: true
             login(token, { ...team, has_seen_prologue: true });
             navigate(destination);
-        } catch (error) {
-            console.error('Failed to update prologue status', error);
-            // If it fails, let them proceed anyway to not block them
+        } catch {
             login(token, { ...team, has_seen_prologue: true });
             navigate(destination);
         } finally {

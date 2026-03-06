@@ -12,7 +12,6 @@ import adminRouter from './routes/admin.js';
 
 dotenv.config();
 
-// ESM path variables (moved down to dev block to prevent Vercel Serverless crashing on transpiled CommonJs)
 
 const app = express();
 export const prisma = new PrismaClient();

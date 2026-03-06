@@ -21,8 +21,7 @@ export default function Leaderboard() {
             try {
                 const res = await api.get('/leaderboard');
                 setEntries(res.data);
-            } catch (err) {
-                console.error('Failed to load leaderboard', err);
+            } catch {
             } finally {
                 setLoading(false);
             }

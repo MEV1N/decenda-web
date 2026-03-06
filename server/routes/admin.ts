@@ -61,22 +61,16 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
         const file = files?.file?.[0];
         const thumbnail = files?.thumbnail?.[0];
 
-        console.log(`[Admin] Challenge Upload Request - ID: ${id}, Title: ${title}`);
-        console.log(`[Admin] Payload: points=${points}, instance=${instance_required}, isLocked=${is_locked}`);
-
         if (!id) {
-            console.error('[Admin] Missing challenge ID');
             return res.status(400).json({ error: 'Missing challenge ID' });
         }
 
         let file_url: string | undefined = undefined;
         let thumbnail_url: string | undefined = undefined;
 
-        console.log('[Admin] Checking for existing challenge...');
         const existingChallenge = await (prisma as any).challenge.findUnique({ where: { id } });
 
         if (file) {
-            console.log(`[Admin] Processing file: ${file.filename}`);
             if (existingChallenge && existingChallenge.file_url) {
                 const fileName = path.basename(existingChallenge.file_url);
                 const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
@@ -88,7 +82,6 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
         }
 
         if (thumbnail) {
-            console.log(`[Admin] Processing thumbnail: ${thumbnail.filename}`);
             if (existingChallenge && existingChallenge.thumbnail_url) {
                 const fileName = path.basename(existingChallenge.thumbnail_url);
                 const filePath = path.join(process.cwd(), 'server', 'uploads', fileName);
@@ -102,8 +95,7 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
         let parsedUnlocks = [];
         try {
             parsedUnlocks = unlocksLocations ? (typeof unlocksLocations === 'string' ? JSON.parse(unlocksLocations) : unlocksLocations) : [];
-        } catch (e) {
-            console.warn('[Admin] Failed to parse unlocksLocations safely:', unlocksLocations);
+        } catch {
         }
 
         const updateData: Record<string, any> = {
@@ -152,7 +144,6 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
             thumbnail_mime: thumbnail ? thumbnail.mimetype : null
         };
 
-        console.log('[Admin] Upserting challenge in DB...');
         const challenge = await (prisma as any).challenge.upsert({
             where: { id },
             update: updateData,
@@ -160,7 +151,6 @@ router.post('/challenge', upload.fields([{ name: 'file', maxCount: 1 }, { name: 
             include: { hints: true }
         });
 
-        console.log('[Admin] Upsert successful for:', challenge.id);
         res.json(challenge);
     } catch (error: any) {
         console.error('[Admin] FATAL ERROR IN CHALLENGE UPLOAD:', error);

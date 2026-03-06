@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import Login from './pages/Login';
 import Map from './pages/Map';
 import Location from './pages/Location';
@@ -70,13 +71,11 @@ function MainLayout() {
         </Routes>
       </main>
 
-      {/* Minimalistic Vignette / Fog Overlay handled in global CSS or wrapper if needed, but flex-1 is fine for now */}
       <div className="pointer-events-none fixed inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] z-40"></div>
     </div>
   );
 }
 
-import { ToastProvider } from './context/ToastContext';
 
 function App() {
   return (

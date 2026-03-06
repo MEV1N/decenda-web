@@ -74,7 +74,6 @@ export default function Map() {
     const { addToast } = useToast();
     useAuth();
 
-    // Prologue is now manually triggered via a button
 
     useEffect(() => {
         async function fetchMap() {
@@ -88,8 +87,7 @@ export default function Map() {
                     }));
 
                 setLocations(locs);
-            } catch (err) {
-                console.error('Failed to load map', err);
+            } catch {
             } finally {
                 setLoading(false);
             }
@@ -118,8 +116,7 @@ export default function Map() {
 
                 // Update refs
                 prevChallengeIds.current = new Set(challenges.map(c => c.id));
-            } catch (err) {
-                console.error('Failed to load live challenges', err);
+            } catch {
             }
         }
 
@@ -148,13 +145,43 @@ export default function Map() {
             setLiveChallenges(prev => prev.map(c => c.id === challengeId ? { ...c, has_solved: true } : c));
             setFlagInputs(prev => ({ ...prev, [challengeId]: '' }));
 
-            // Add points locally to avoid needing to refetch team data immediately
-            // But ideally the context updates, maybe a quick refresh of user profile could be triggered
         } catch (err: any) {
-            console.error('Submit error:', err);
             addToast(err.response?.data?.error || 'Failed to submit passcode.', 'error');
         } finally {
             setSubmittingFlag(false);
+        }
+    };
+
+    const handleAuthenticatedDownload = async (fileUrl: string) => {
+        // Static public files (manually uploaded to public/) — direct link
+        if (!fileUrl.startsWith('/api/')) {
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = fileUrl.split('/').pop() || 'case-file';
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            return;
+        }
+        // API-served files — use native fetch with auth token
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(fileUrl, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Download failed');
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'case-file';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch {
+            addToast('Failed to download file. Please try again.', 'error');
         }
     };
 
@@ -334,14 +361,12 @@ export default function Map() {
                                                                 )}
                                                             </div>
                                                             <div className="flex flex-col items-end gap-3 shrink-0">
-                                                                <a
-                                                                    href={api.defaults.baseURL?.replace('/api', '') + challenge.file_url}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
+                                                                <button
+                                                                    onClick={() => handleAuthenticatedDownload(challenge.file_url)}
                                                                     className={`px-4 py-2 rounded text-xs uppercase font-bold tracking-wider transition-colors inline-flex items-center gap-2 ${challenge.is_bonus ? 'bg-yellow-600 hover:bg-yellow-500 text-black' : 'bg-zinc-800 hover:bg-zinc-700 text-white'}`}
                                                                 >
                                                                     Download Assets
-                                                                </a>
+                                                                </button>
                                                                 <span className="text-[10px] text-zinc-600 font-mono">ISSUED: {new Date(challenge.created_at).toLocaleString()}</span>
                                                             </div>
                                                         </div>

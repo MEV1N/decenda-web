@@ -100,8 +100,7 @@ export default function Admin() {
             const res = await api.get('/admin/all-data');
             setChallenges(res.data.liveChallenges);
             setLocations(res.data.locations);
-        } catch (err) {
-            console.error(err);
+        } catch {
         }
     };
 
@@ -206,7 +205,6 @@ export default function Admin() {
             resetForm();
             fetchChallenges();
         } catch (err: any) {
-            console.error(err);
             const serverMsg = err?.response?.data?.detail || err?.response?.data?.error || '';
             addToast(`Failed to ${editId ? 'update' : 'deploy'} case file${serverMsg ? ': ' + serverMsg : ''}`, 'error');
         } finally {
@@ -220,8 +218,7 @@ export default function Admin() {
             await api.delete(`/admin/live-challenge/${id}`);
             addToast('Case file deleted', 'info');
             fetchChallenges();
-        } catch (err) {
-            console.error(err);
+        } catch {
             addToast('Failed to delete case file', 'error');
         }
     };
@@ -256,7 +253,6 @@ export default function Admin() {
             resetStoryForm();
             fetchChallenges();
         } catch (err: any) {
-            console.error(err);
             const serverMsg = err?.response?.data?.error || '';
             addToast(`Failed to update story case file${serverMsg ? ': ' + serverMsg : ''}`, 'error');
         } finally {
@@ -300,6 +296,35 @@ export default function Admin() {
             addToast('Failed to delete hint', 'error');
         }
     };
+
+    const handleAuthenticatedDownload = async (fileUrl: string) => {
+        // Static public files (manually uploaded to public/) — direct link
+        if (!fileUrl.startsWith('/api/')) {
+            window.open(fileUrl, '_blank');
+            return;
+        }
+        // API-served files — use native fetch with auth token
+        // (cannot use axios api instance: its baseURL would produce /api/api/... double-path)
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(fileUrl, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Download failed');
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'case-file';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch {
+            addToast('Failed to open file. Please try again.', 'error');
+        }
+    };
+
 
     if (team?.role !== 'ADMIN') return null;
 
@@ -499,14 +524,13 @@ export default function Admin() {
                                         <p className="text-sm text-dimmed mb-3 whitespace-pre-wrap relative z-10">{challenge.description}</p>
                                         <div className="flex justify-between items-center text-xs relative z-10">
                                             <span className="text-dimmed">Deployed: {new Date(challenge.created_at).toLocaleString()}</span>
-                                            <a
-                                                href={api.defaults.baseURL?.replace('/api', '') + challenge.file_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className={`${challenge.is_locked ? 'text-zinc-600 pointer-events-none' : 'text-accent hover:underline'}`}
+                                            <button
+                                                onClick={() => handleAuthenticatedDownload(challenge.file_url)}
+                                                disabled={challenge.is_locked}
+                                                className={`${challenge.is_locked ? 'text-zinc-600 cursor-not-allowed' : 'text-accent hover:underline'}`}
                                             >
                                                 View File
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 ))
@@ -672,14 +696,12 @@ export default function Admin() {
                                                     <p className="text-xs text-dimmed line-clamp-2 leading-relaxed mb-2">{chal.description}</p>
                                                     {chal.file_url && (
                                                         <div className="flex justify-end pr-1">
-                                                            <a
-                                                                href={api.defaults.baseURL?.replace('/api', '') + chal.file_url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
+                                                            <button
+                                                                onClick={() => handleAuthenticatedDownload(chal.file_url!)}
                                                                 className="text-[10px] text-accent hover:underline uppercase tracking-tighter"
                                                             >
                                                                 View Forensic File
-                                                            </a>
+                                                            </button>
                                                         </div>
                                                     )}
                                                 </div>
