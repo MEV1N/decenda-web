@@ -1,0 +1,23 @@
+Gravenfall Clinic – Archived Records
+
+During the investigation of the abandoned clinic in Gravenfall, a damaged archive file was recovered from an old workstation used for patient record management.
+
+Most of the system files were corrupted, but one archive remained intact. The contents appear heavily encoded and encrypted. Initial inspection shows no readable information.
+
+Investigators found a small handwritten note near the workstation:
+
+"The records hidden in it."
+
+Further examination of the clinic system logs revealed a recurring email address associated with the archive process:
+
+[jefferson_jologs@yahoo.com](mailto:jefferson_jologs@yahoo.com)
+
+It is believed that this email may have been used as a key or reference when the records were archived.
+
+Your task is to analyze the recovered file and uncover the hidden message inside the clinic archive.
+
+Recovered File:
+clinic_records.dat
+
+Flag format:
+dec{[...@mbc.ctf](mailto:...@mbc.ctf)}

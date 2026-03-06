@@ -1,0 +1,3 @@
+The clinic stored important records inside scan files.
+Look carefully at the image data.
+Sometimes metadata remembers more than expected.

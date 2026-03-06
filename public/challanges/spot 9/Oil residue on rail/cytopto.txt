@@ -1,0 +1,26 @@
+Secure Messaging Service
+=========================
+
+Our developers implemented AES-CBC encryption to protect user comments
+and sensitive admin data.
+
+Two encrypted messages were captured from the server.
+
+Encryption mode: AES-CBC
+Block size: 16 bytes
+
+IV  = 41414141414141414141414141414141
+
+Ciphertext 1:
+366895bb51e70838aa1618d5a25fe95d5c84066303cae1b232095d7c4c2e0fb5
+
+Ciphertext 2:
+97d42c894beba569fd6d12f72688e4ba5724c9133012ae1ff199258f92a3f35079a63ca90fc1a3ad251e7987d209c00446849fb69aff33a91fe5fb17fdefbdb4eea813af20b25eda2a91f30dc8b0ac2f
+
+We know that Ciphertext 1 corresponds to the following user input:s
+
+comment=hello123
+
+Ciphertext 2 contains the admin flag.
+
+Recover the flag.
